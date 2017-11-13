@@ -1,0 +1,23 @@
+body, html {
+	width: 100%;
+	height: 100%;
+	margin:  0;
+	background: #333;
+}
+
+#sidebar, #view {
+	float: left;
+	height: 100%;
+	position: relative;
+}
+#sidebar {
+	width: 300px;
+}
+#view {
+	width: calc(100% - 300px);
+	width: -webkit-calc(100% - 300px);
+}
+#three-canvas {
+	width: 100%;
+	height: 100%;
+}
