@@ -73,6 +73,7 @@ class View3D {
     this.scene.add(new THREE.GridHelper(1000, 100, 0x333333, 0x333333))
     this.scene.add(new THREE.GridHelper(1000, 10, 0xffffff, 0xffffff))
   }
+
   registerSelection () {
     let justClick = false
     this.renderer.domElement.addEventListener('mousedown', event => { justClick = true })
