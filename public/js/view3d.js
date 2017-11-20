@@ -63,6 +63,10 @@ class View3D {
 
     this.headLight = new THREE.PointLight(0x888888, 1.0)
 
+    let light = new THREE.DirectionalLight(0xffffff, 0.5)
+    light.position.set(20, 20, 0)
+
+    this.scene.add(light)
     this.scene.add(this.camera)
     this.scene.add(this.headLight)
     this.scene.add(new THREE.AmbientLight(0x333333, 0.3))
@@ -114,14 +118,12 @@ class BlockBuilder extends View3D {
     super(container)
 
     this.blocks = []
-    this.addExampleCube()
-    this.loadBlock()
   }
 
-  loadBlock (url) {
-    new THREE.GLTFLoader().load('./roof_mid.gltf', data => {
+  loadBlock (name, category) {
+    new THREE.GLTFLoader().load(`/public/blox/${category}/${name}.gltf`, data => {
       let block = data.scene.children[0]
-      block.scale.set(50, 50, 50)
+      block.scale.set(100, 100, 100)
       this.scene.add(block)
       this.blocks.push(block)
     })
