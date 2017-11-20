@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "express": "^4.16.2",
+    "glob": "^7.1.2",
     "three": "^0.88.0"
   },
   "devDependencies": {},
