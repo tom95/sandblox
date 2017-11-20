@@ -1,4 +1,5 @@
-const glob = require('glob')
+const path = require('path')
+const glob = require('glob-promise')
 const express = require('express')
 const app = express()
 
@@ -21,4 +22,7 @@ async function enumerateAllBlox () {
   return allBlox
 }
 
+app.use('/public', express.static('public'))
+app.use('/node_modules', express.static('node_modules'))
+app.use('/', (req, res) => { res.sendFile('index.html', {root: path.join(__dirname, 'public')}) })
 app.listen(process.env.POST || 3000, () => console.log('Port 3000'))
