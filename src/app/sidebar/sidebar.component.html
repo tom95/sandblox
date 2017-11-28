@@ -1,0 +1,26 @@
+<div class="sidebar-tabs clearfix">
+    <button class="active">
+        <span class="icon icon-cube"></span>
+    </button>
+    <button>
+        <span class="icon icon-brush"></span>
+    </button>
+    <button>
+        <span class="icon icon-move"></span>
+    </button>
+    <button>
+        <span class="icon icon-resize-full"></span>
+    </button>
+    <button>
+        <span class="icon icon-object-ungroup"></span>
+    </button>
+</div>
+
+<div id="sidebar-blocks">
+    <sb-block *ngFor="let block of blox[selectedCategory]"
+        [name]="block" [category]="selectedCategory" (added)="onAddBlock($event)">
+    </sb-block>
+</div>
+
+<sb-toolbar (transformModeChanged)="transformModeChanged.emit($event)">
+</sb-toolbar>

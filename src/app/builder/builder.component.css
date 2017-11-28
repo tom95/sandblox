@@ -1,0 +1,7 @@
+:host {
+  float: left;
+  height: 100%;
+  position: relative;
+  width: calc(100% - 320px);
+  width: -webkit-calc(100% - 320px);
+}

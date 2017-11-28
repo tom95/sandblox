@@ -1,9 +1,14 @@
+/* You can add global styles to this file, and also import other style files */
+*, * > * {
+  box-sizing: border-box;
+}
+
 body, html {
   width: 100%;
   height: 100%;
   margin:  0;
   padding: 0;
-  background: #333;
+  background: #222;
   overflow: hidden;
 }
 
@@ -13,60 +18,6 @@ body, html {
   display: table;
 }
 
-#sidebar, #view {
-  float: left;
-  height: 100%;
-  position: relative;
-}
-#sidebar {
-  width: 320px;
-}
-#view {
-  width: calc(100% - 320px);
-  width: -webkit-calc(100% - 320px);
-}
-#three-canvas {
-  width: 100%;
-  height: 100%;
-}
-
-.sidebar-tabs {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-.sidebar-tabs button {
-  color: #fff;
-  font-size: 22px;
-  width: 64px;
-  height: 64px;
-  float: left;
-  border: none;
-  outline: none;
-  background: none;
-  cursor: pointer;
-}
-.sidebar-tabs button.active {
-  color: #333;
-  background: #fff;
-}
-.sidebar-tabs button.active:hover {
-  background: #eee;
-}
-.sidebar-tabs button:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-#sidebar-blocks {
-  padding: 1em;
-  height: calc(100% - 64px);
-  overflow-y: auto;
-}
-#sidebar-blocks div {
-  width: 86px;
-  height: 86px;
-  background: #494949;
-  float: left;
-  margin: 0.15em;
-  border-radius: 0.5em;
-}
 @font-face {
   font-family: 'fontello';
   src: url('font/fontello.eot?43068711');

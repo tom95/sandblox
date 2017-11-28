@@ -1,0 +1,14 @@
+
+:host {
+  height: 40px;
+  padding: 4px;
+  font-size: 22px;
+}
+:host button {
+  font-size: inherit;
+  background: none;
+  color: #fff;
+  border: none;
+  margin: 4px;
+  padding: 0;
+}

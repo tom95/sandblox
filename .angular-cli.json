@@ -1,0 +1,71 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "project": {
+    "name": "sandblox"
+  },
+  "apps": [
+    {
+      "root": "src",
+      "outDir": "dist",
+      "assets": [
+        "assets",
+        "favicon.ico"
+      ],
+      "index": "index.html",
+      "main": "main.ts",
+      "polyfills": "polyfills.ts",
+      "test": "test.ts",
+      "tsconfig": "tsconfig.app.json",
+      "testTsconfig": "tsconfig.spec.json",
+      "prefix": "sb",
+      "styles": [
+        "styles.css"
+      ],
+      "scripts": [
+		"../node_modules/three/build/three.js",
+		"../node_modules/three/examples/js/controls/TransformControls.js",
+		"../node_modules/three/examples/js/controls/OrbitControls.js",
+		"../node_modules/three/examples/js/loaders/GLTFLoader.js",
+		"../node_modules/three/examples/js/shaders/CopyShader.js",
+		"../node_modules/three/examples/js/shaders/FXAAShader.js",
+		"../node_modules/three/examples/js/postprocessing/EffectComposer.js",
+		"../node_modules/three/examples/js/postprocessing/ShaderPass.js",
+		"../node_modules/three/examples/js/postprocessing/OutlinePass.js",
+		"../node_modules/three/examples/js/postprocessing/RenderPass.js"
+      ],
+      "environmentSource": "environments/environment.ts",
+      "environments": {
+        "dev": "environments/environment.ts",
+        "prod": "environments/environment.prod.ts"
+      }
+    }
+  ],
+  "e2e": {
+    "protractor": {
+      "config": "./protractor.conf.js"
+    }
+  },
+  "lint": [
+    {
+      "project": "src/tsconfig.app.json",
+      "exclude": "**/node_modules/**"
+    },
+    {
+      "project": "src/tsconfig.spec.json",
+      "exclude": "**/node_modules/**"
+    },
+    {
+      "project": "e2e/tsconfig.e2e.json",
+      "exclude": "**/node_modules/**"
+    }
+  ],
+  "test": {
+    "karma": {
+      "config": "./karma.conf.js"
+    }
+  },
+  "defaults": {
+    "styleExt": "css",
+    "component": {}
+  }
+}

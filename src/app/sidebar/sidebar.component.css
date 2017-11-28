@@ -1,0 +1,38 @@
+
+:host {
+  float: left;
+  height: 100%;
+  position: relative;
+  width: 320px;
+}
+
+.sidebar-tabs {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+.sidebar-tabs button {
+  color: #fff;
+  font-size: 22px;
+  width: 64px;
+  height: 64px;
+  float: left;
+  border: none;
+  outline: none;
+  background: none;
+  cursor: pointer;
+}
+.sidebar-tabs button.active {
+  color: #333;
+  background: #fff;
+}
+.sidebar-tabs button.active:hover {
+  background: #eee;
+}
+.sidebar-tabs button:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+#sidebar-blocks {
+  padding: 1em;
+  height: calc(100% - 64px - 40px);
+  overflow-y: auto;
+}
