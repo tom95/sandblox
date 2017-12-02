@@ -2,6 +2,11 @@ import * as TH from 'three'
 
 declare var THREE: any
 
+declare class TransformControls extends TH.TransformControls {
+  setTranslationSnap(value: number)
+  setRotationSnap(value: number)
+}
+
 export class SBRenderer {
 
   container: HTMLElement
@@ -13,7 +18,7 @@ export class SBRenderer {
   scene: TH.Scene
   camera: TH.PerspectiveCamera
   headLight: TH.PointLight
-  control: THREE.TransformControls
+  control: TransformControls
   cameraControls: THREE.OrbitControls
 
   blocks: TH.Object3D[] = []
