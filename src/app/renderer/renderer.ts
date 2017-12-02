@@ -2,24 +2,31 @@ import * as TH from 'three'
 
 declare var THREE: any
 
+import { CameraControls } from './orbit-controls'
+
 declare class TransformControls extends TH.TransformControls {
   setTranslationSnap(value: number)
   setRotationSnap(value: number)
+  addEventListener(event, func)
 }
 
+const BASE_SCALE = 100
+
 export class SBRenderer {
+
+  dirty = true
 
   container: HTMLElement
 
   renderer: TH.WebGLRenderer
-  outlinePass: THREE.OutlinePass
-  composer: THREE.EffectComposer
+  outlineMaterial: THREE.ShaderMaterial
+  outlineScene = new TH.Scene()
 
-  scene: TH.Scene
+  scene = new TH.Scene()
   camera: TH.PerspectiveCamera
   headLight: TH.PointLight
   control: TransformControls
-  cameraControls: THREE.OrbitControls
+  cameraControls: any
 
   blocks: TH.Object3D[] = []
 
@@ -28,6 +35,7 @@ export class SBRenderer {
 
     this.buildScene()
     this.buildRenderer()
+    this.buildOutlineMaterial()
     this.registerSelection()
     this.buildControls()
     this.resize()
@@ -37,36 +45,28 @@ export class SBRenderer {
     this.renderer = new TH.WebGLRenderer({
       antialias: true
     })
+    this.renderer.autoClear = false
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.container.appendChild(this.renderer.domElement)
-
-    const renderPass = new THREE.RenderPass(this.scene, this.camera)
-
-    this.composer = new THREE.EffectComposer(this.renderer)
-    this.composer.addPass(renderPass)
-    this.outlinePass = new THREE.OutlinePass(new TH.Vector2(window.innerWidth, window.innerHeight), this.scene, this.camera)
-    this.composer.addPass(this.outlinePass)
-
-    const outPass = new THREE.ShaderPass(THREE.CopyShader)
-    outPass.renderToScreen = true
-    this.composer.addPass(outPass)
   }
 
   buildControls () {
     this.control = new THREE.TransformControls(this.camera, this.renderer.domElement)
     this.control.setTranslationSnap(10)
     this.control.setRotationSnap(this.degToRad(15))
+    this.control.addEventListener('change', () => {
+      this.control.object.userData.outlineCopy.position.copy(this.control.object.position)
+      this.setDirty()
+    })
     this.scene.add(this.control)
 
-    this.cameraControls = new THREE.OrbitControls(this.camera, this.renderer.domElement)
-    this.cameraControls.enableDamping = true
-    this.cameraControls.rotateSpeed = 0.3
+    this.cameraControls = new CameraControls(this.camera, this.renderer.domElement)
+    this.cameraControls.rotateSpeed = 0.5
     this.cameraControls.zoomSpeed = 0.6
+    this.cameraControls.onUpdate = () => this.setDirty()
   }
 
   buildScene () {
-    this.scene = new TH.Scene()
-
     this.camera = new TH.PerspectiveCamera(45, 1, 0.1, 7000)
     this.camera.position.set(300, 300, 300)
 
@@ -112,30 +112,57 @@ export class SBRenderer {
   }
 
   update () {
+    this.dirty = false
     this.headLight.position.copy(this.camera.position)
-    this.cameraControls.update()
-    this.composer.render()
+    this.renderer.clear()
+    this.renderer.render(this.outlineScene, this.camera)
+    this.renderer.render(this.scene, this.camera)
   }
 
   resize () {
     this.camera.aspect = this.container.clientWidth / this.container.clientHeight
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(this.container.clientWidth, this.container.clientHeight)
-    this.composer.setSize(this.container.clientWidth, this.container.clientHeight)
   }
 
   select (object) {
     this.control.attach(object)
-    this.outlinePass.selectedObjects = [object]
+
+    const copy = new THREE.Mesh(object.geometry, this.outlineMaterial)
+    copy.material.depthWrite = false
+    copy.scale.set(BASE_SCALE + 1, BASE_SCALE + 1, BASE_SCALE + 1)
+    copy.position.copy(object.position)
+    this.outlineScene.add(copy)
+    object.userData.outlineCopy = copy
   }
 
   deselect () {
-    this.outlinePass.selectedObjects = []
+    this.outlineScene.remove(this.control.object.userData.outlineCopy)
     this.control.detach()
   }
 
   setTransformMode (mode) {
     this.control.setMode(mode)
+  }
+
+  buildOutlineMaterial () {
+    this.outlineMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        offset: { value: 0 / BASE_SCALE }
+      },
+      vertexShader: `
+      uniform float offset;
+      void main() {
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position + normal * offset, 1.0);
+      }
+      `,
+      fragmentShader: `
+      void main() {
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+      }
+      `
+    })
+    this.outlineMaterial.depthWrite = false
   }
 
   degToRad (deg) {
@@ -145,11 +172,16 @@ export class SBRenderer {
   loadBlock (identifier) {
     new THREE.GLTFLoader().load(`/public/blox/${identifier}.gltf`, data => {
       const block = data.scene.children[0]
-      block.scale.set(100, 100, 100)
+      block.scale.set(BASE_SCALE, BASE_SCALE, BASE_SCALE)
+      block.material = new THREE.MeshPhongMaterial(0xffffff)
       this.scene.add(block)
       this.blocks.push(block)
-      console.log('JI', identifier)
+      this.setDirty()
     })
+  }
+
+  setDirty() {
+    this.dirty = true
   }
 
   selectableObjects () {

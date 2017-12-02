@@ -40,7 +40,8 @@ export class BuilderComponent implements OnInit, OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   shortcutHandler(event) {
-    console.log(event)
+    this.renderer.dirty = true
+
     switch (event.key) {
       case 's':
         this.setTransformMode('scale')
@@ -55,7 +56,10 @@ export class BuilderComponent implements OnInit, OnDestroy {
   }
 
   step() {
-    this.renderer.update()
+    if (this.renderer.dirty) {
+      this.renderer.update()
+    }
+
     if (this.running) {
       window.requestAnimationFrame(() => this.step())
     }
