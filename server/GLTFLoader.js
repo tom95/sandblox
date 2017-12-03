@@ -49,6 +49,7 @@ module.exports = THREE.GLTFLoader = (function () {
         try {
           scope.parse(data, path, onLoad, onError)
         } catch (e) {
+          console.log(e)
           if (onError !== undefined) {
             // For SyntaxError or TypeError, return a generic failure message.
             onError(e.constructor === Error ? e : new Error('THREE.GLTFLoader: Unable to parse model.'))
