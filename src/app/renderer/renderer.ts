@@ -4,6 +4,8 @@ declare var THREE: any
 
 import { CameraControls } from './orbit-controls'
 
+import { Material } from '../material'
+
 declare class TransformControls extends TH.TransformControls {
   setTranslationSnap(value: number)
   setRotationSnap(value: number)
@@ -29,10 +31,13 @@ export class SBRenderer {
   cameraControls: any
 
   blocks: TH.Object3D[] = []
+  materialPicker: Material
 
   constructor(container) {
     this.container = container
+  }
 
+  build () {
     this.buildScene()
     this.buildRenderer()
     this.buildOutlineMaterial()
@@ -55,7 +60,9 @@ export class SBRenderer {
     this.control.setTranslationSnap(10)
     this.control.setRotationSnap(this.degToRad(15))
     this.control.addEventListener('change', () => {
-      this.control.object.userData.outlineCopy.position.copy(this.control.object.position)
+      if (this.control.object) {
+        this.control.object.userData.outlineCopy.position.copy(this.control.object.position)
+      }
       this.setDirty()
     })
     this.scene.add(this.control)
@@ -104,8 +111,12 @@ export class SBRenderer {
 
       const intersects = raycaster.intersectObjects(this.selectableObjects(), true)
       if (intersects.length) {
-        const picked = intersects[0].object
-        this.select(picked.parent.type === 'Group' ? picked.parent : picked)
+        if (this.materialPicker) {
+          (<TH.Mesh> intersects[0].object).material = this.materialPicker.glMaterial
+        } else {
+          const picked = intersects[0].object
+          this.select(picked.parent.type === 'Group' ? picked.parent : picked)
+        }
       } else {
         this.deselect()
       }
@@ -203,5 +214,9 @@ export class SBRenderer {
 
   selectableObjects () {
     return this.blocks
+  }
+
+  setMaterialPicker (material: Material) {
+    this.materialPicker = material
   }
 }

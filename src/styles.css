@@ -12,7 +12,7 @@ body, html {
   overflow: hidden;
 }
 
-.clearfix:after {
+.clearfix:after, .clearfix:before {
   content: "";
   clear: both;
   display: table;

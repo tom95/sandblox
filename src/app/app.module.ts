@@ -9,6 +9,8 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
 import { BloxService } from './blox.service';
 import { BuilderComponent } from './builder/builder.component';
 import { BlockComponent } from './block/block.component';
+import { MaterialComponent } from './material/material.component';
+import { MaterialEditorComponent } from './material-editor/material-editor.component';
 
 @NgModule({
   declarations: [
@@ -16,7 +18,9 @@ import { BlockComponent } from './block/block.component';
     SidebarComponent,
     ToolbarComponent,
     BuilderComponent,
-    BlockComponent
+    BlockComponent,
+    MaterialComponent,
+    MaterialEditorComponent
   ],
   imports: [
     BrowserModule,

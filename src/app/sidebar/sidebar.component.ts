@@ -1,5 +1,6 @@
 import { Output, EventEmitter, Component, OnInit } from '@angular/core'
 import { BloxService } from '../blox.service'
+import { Material } from '../material'
 
 @Component({
   selector: 'sb-sidebar',
@@ -10,6 +11,12 @@ export class SidebarComponent implements OnInit {
 
   @Output() transformModeChanged = new EventEmitter<string>()
   @Output() addBlock = new EventEmitter<string>()
+  @Output() viewDirty = new EventEmitter<void>()
+
+  activeTab = 'paint'
+
+  materials = [new Material('#ff0000'), new Material('#00ff00'), new Material('#0000ff')]
+  selectedMaterial: Material = null
 
   blox: {[key: string]: string[]} = {}
   selectedCategory: string = null
@@ -23,8 +30,16 @@ export class SidebarComponent implements OnInit {
     })
   }
 
+  getSelectedMaterial() {
+    return this.activeTab === 'paint' ? this.selectedMaterial : null
+  }
+
   onAddBlock(identifier: string) {
     this.addBlock.emit(identifier)
+  }
+
+  setViewDirty() {
+    this.viewDirty.emit()
   }
 
 }

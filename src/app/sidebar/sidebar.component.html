@@ -1,25 +1,43 @@
 <div class="sidebar-tabs clearfix">
-    <button class="active">
+    <button [class.active]="activeTab === 'blocks'" (click)="activeTab = 'blocks'">
         <span class="icon icon-cube"></span>
     </button>
-    <button>
+    <button  [class.active]="activeTab === 'paint'" (click)="activeTab = 'paint'">
         <span class="icon icon-brush"></span>
     </button>
-    <button>
+    <button [class.active]="activeTab === ''">
         <span class="icon icon-move"></span>
     </button>
-    <button>
+    <button [class.active]="activeTab === ''">
         <span class="icon icon-resize-full"></span>
     </button>
-    <button>
+    <button [class.active]="activeTab === ''">
         <span class="icon icon-object-ungroup"></span>
     </button>
 </div>
 
-<div id="sidebar-blocks">
+<div id="sidebar-blocks" [style.display]="activeTab === 'blocks' ? 'block' : 'none'">
     <sb-block *ngFor="let block of blox[selectedCategory]"
         [name]="block" [category]="selectedCategory" (added)="onAddBlock($event)">
     </sb-block>
+</div>
+
+<div [style.display]="activeTab === 'paint' ? 'block' : 'none'">
+    <div class="clearfix">
+        <sb-material
+            *ngFor="let material of materials"
+            [material]="material"
+            [selected]="selectedMaterial === material"
+            (click)="selectedMaterial = material">
+        </sb-material>
+    </div>
+
+    <hr class="clearfix">
+
+    <sb-material-editor
+        (change)="setViewDirty()"
+        [material]="selectedMaterial"
+        *ngIf="selectedMaterial"></sb-material-editor>
 </div>
 
 <sb-toolbar (transformModeChanged)="transformModeChanged.emit($event)">

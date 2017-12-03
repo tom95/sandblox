@@ -1,4 +1,4 @@
-import { HostListener, ElementRef, Component, OnInit, OnDestroy } from '@angular/core'
+import { SimpleChanges, OnChanges, Input, HostListener, ElementRef, Component, OnInit, OnDestroy } from '@angular/core'
 
 import { SBRenderer } from '../renderer/renderer'
 import { BloxService } from '../blox.service'
@@ -6,23 +6,36 @@ import { BloxService } from '../blox.service'
 @Component({
   selector: 'sb-builder',
   templateUrl: './builder.component.html',
-  styleUrls: ['./builder.component.css']
+  styleUrls: ['./builder.component.css'],
+  host: {
+    '[style.cursor]': 'materialPicker ? "crosshair" : "default"'
+  }
 })
-export class BuilderComponent implements OnInit, OnDestroy {
+export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
+
+  @Input() materialPicker
 
   renderer: SBRenderer
   running = false
 
-  constructor(private element: ElementRef, private bloxService: BloxService) {}
+  constructor(private element: ElementRef, private bloxService: BloxService) {
+    this.renderer = new SBRenderer(this.element.nativeElement)
+  }
 
   ngOnInit() {
-    this.renderer = new SBRenderer(this.element.nativeElement)
+    this.renderer.build()
     this.running = true
     this.step()
   }
 
   ngOnDestroy() {
     this.running = false
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes.materialPicker !== undefined) {
+      this.renderer.setMaterialPicker(changes.materialPicker.currentValue)
+    }
   }
 
   setTransformMode(mode: string) {
@@ -35,6 +48,7 @@ export class BuilderComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize')
   resizeRenderer() {
+    this.renderer.setDirty()
     this.renderer.resize()
   }
 
@@ -63,6 +77,10 @@ export class BuilderComponent implements OnInit, OnDestroy {
     if (this.running) {
       window.requestAnimationFrame(() => this.step())
     }
+  }
+
+  setDirty() {
+    this.renderer.setDirty()
   }
 
 }
