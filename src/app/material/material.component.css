@@ -7,4 +7,7 @@
   display: block;
   float: left;
   box-sizing: content-box;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }

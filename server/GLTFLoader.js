@@ -1243,69 +1243,43 @@ module.exports = THREE.GLTFLoader = (function () {
    * @param {number} textureIndex
    * @return {Promise<THREE.Texture>}
    */
-  GLTFParser.prototype.loadTexture = function (textureIndex) {
+  GLTFParser.prototype.loadTexture = async function (textureIndex) {
     var parser = this
     var json = this.json
     var options = this.options
     var textureLoader = this.textureLoader
 
-    var URL = window.URL || window.webkitURL
-
     var textureDef = json.textures[ textureIndex ]
     var source = json.images[ textureDef.source ]
     var sourceURI = source.uri
-    var isObjectURL = false
 
-    if (source.bufferView !== undefined) {
-      // Load binary image data from bufferView, if provided.
+    // console.log('def', textureDef)
+    // console.log('source', source)
+    // console.log('uri', source.uri)
+    const texture = new THREE.Texture()
 
-      sourceURI = parser.getDependency('bufferView', source.bufferView)
-        .then(function (bufferView) {
-          isObjectURL = true
-          var blob = new Blob([ bufferView ], { type: source.mimeType })
-          sourceURI = URL.createObjectURL(blob)
-          return sourceURI
-        })
+    texture.flipY = false
+
+    if (textureDef.name !== undefined) texture.name = textureDef.name
+
+    texture.format = textureDef.format !== undefined ? WEBGL_TEXTURE_FORMATS[ textureDef.format ] : THREE.RGBAFormat
+
+    if (textureDef.internalFormat !== undefined && texture.format !== WEBGL_TEXTURE_FORMATS[ textureDef.internalFormat ]) {
+      console.warn('THREE.GLTFLoader: Three.js does not support texture internalFormat which is different from texture format. ' +
+                                                                                      'internalFormat will be forced to be the same value as format.')
     }
 
-    return Promise.resolve(sourceURI).then(function (sourceURI) {
-      // Load Texture resource.
+    texture.type = textureDef.type !== undefined ? WEBGL_TEXTURE_DATATYPES[ textureDef.type ] : THREE.UnsignedByteType
 
-      var loader = THREE.Loader.Handlers.get(sourceURI) || textureLoader
+    var samplers = json.samplers || {}
+    var sampler = samplers[ textureDef.sampler ] || {}
 
-      return new Promise(function (resolve, reject) {
-        loader.load(resolveURL(sourceURI, options.path), resolve, undefined, reject)
-      })
-    }).then(function (texture) {
-      // Clean up resources and configure Texture.
+    texture.magFilter = WEBGL_FILTERS[ sampler.magFilter ] || THREE.LinearFilter
+    texture.minFilter = WEBGL_FILTERS[ sampler.minFilter ] || THREE.LinearMipMapLinearFilter
+    texture.wrapS = WEBGL_WRAPPINGS[ sampler.wrapS ] || THREE.RepeatWrapping
+    texture.wrapT = WEBGL_WRAPPINGS[ sampler.wrapT ] || THREE.RepeatWrapping
 
-      if (isObjectURL === true) {
-        URL.revokeObjectURL(sourceURI)
-      }
-
-      texture.flipY = false
-
-      if (textureDef.name !== undefined) texture.name = textureDef.name
-
-      texture.format = textureDef.format !== undefined ? WEBGL_TEXTURE_FORMATS[ textureDef.format ] : THREE.RGBAFormat
-
-      if (textureDef.internalFormat !== undefined && texture.format !== WEBGL_TEXTURE_FORMATS[ textureDef.internalFormat ]) {
-        console.warn('THREE.GLTFLoader: Three.js does not support texture internalFormat which is different from texture format. ' +
-											'internalFormat will be forced to be the same value as format.')
-      }
-
-      texture.type = textureDef.type !== undefined ? WEBGL_TEXTURE_DATATYPES[ textureDef.type ] : THREE.UnsignedByteType
-
-      var samplers = json.samplers || {}
-      var sampler = samplers[ textureDef.sampler ] || {}
-
-      texture.magFilter = WEBGL_FILTERS[ sampler.magFilter ] || THREE.LinearFilter
-      texture.minFilter = WEBGL_FILTERS[ sampler.minFilter ] || THREE.LinearMipMapLinearFilter
-      texture.wrapS = WEBGL_WRAPPINGS[ sampler.wrapS ] || THREE.RepeatWrapping
-      texture.wrapT = WEBGL_WRAPPINGS[ sampler.wrapT ] || THREE.RepeatWrapping
-
-      return texture
-    })
+    return texture
   }
 
   /**

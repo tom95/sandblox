@@ -52,7 +52,15 @@ module.exports = class GLRenderer {
   loadGltf (blockPath) {
     return new Promise((resolve, reject) => {
       new GLTFLoader().load(blockPath, data => {
-        resolve(data.scene.children[0])
+        const obj = data.scene.children[0]
+        const material = new THREE.MeshStandardMaterial({color: new THREE.Color('#ff0000')})
+        obj.position.set(0, 0, 0)
+        if (obj.type === 'Group') {
+          obj.children.forEach(o => { o.material = material })
+        } else {
+          obj.material = material
+        }
+        resolve(obj)
       }, () => {}, err => reject(err))
     })
   }

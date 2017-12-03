@@ -13,9 +13,9 @@ export class SidebarComponent implements OnInit {
   @Output() addBlock = new EventEmitter<string>()
   @Output() viewDirty = new EventEmitter<void>()
 
-  activeTab = 'paint'
+  activeTab = 'blocks'
 
-  materials = [new Material('#ff0000'), new Material('#00ff00'), new Material('#0000ff')]
+  materials = [new Material('#ff0000'), new Material('#00ff00'), new Material('#0000ff'), new Material('#ffffff', 'wall')]
   selectedMaterial: Material = null
 
   blox: {[key: string]: string[]} = {}

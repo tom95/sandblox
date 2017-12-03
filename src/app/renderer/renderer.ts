@@ -200,8 +200,10 @@ export class SBRenderer {
   loadBlock (identifier) {
     new THREE.GLTFLoader().load(`/public/blox/${identifier}.gltf`, data => {
       const block = data.scene.children[0]
+      console.log(block)
       block.scale.set(BASE_SCALE, BASE_SCALE, BASE_SCALE)
       block.material = new THREE.MeshPhongMaterial(0xffffff)
+      block.position.set(BASE_SCALE / 2, 0, BASE_SCALE / 2)
       this.scene.add(block)
       this.blocks.push(block)
       this.setDirty()

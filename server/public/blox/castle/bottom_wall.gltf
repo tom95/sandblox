@@ -1,0 +1,139 @@
+{
+    "accessors" : [
+        {
+            "bufferView" : 0, 
+            "componentType" : 5121, 
+            "count" : 60, 
+            "max" : [
+                43
+            ], 
+            "min" : [
+                0
+            ], 
+            "type" : "SCALAR"
+        }, 
+        {
+            "bufferView" : 1, 
+            "componentType" : 5126, 
+            "count" : 44, 
+            "max" : [
+                0.6500000357627869, 
+                0.30000001192092896, 
+                -0.2500000298023224
+            ], 
+            "min" : [
+                -0.6500000357627869, 
+                0.0, 
+                -0.5500000715255737
+            ], 
+            "type" : "VEC3"
+        }, 
+        {
+            "bufferView" : 2, 
+            "componentType" : 5126, 
+            "count" : 44, 
+            "max" : [
+                0.7071068286895752, 
+                1.0, 
+                1.0
+            ], 
+            "min" : [
+                -0.7071068286895752, 
+                -1.0, 
+                -1.0
+            ], 
+            "type" : "VEC3"
+        }, 
+        {
+            "bufferView" : 3, 
+            "componentType" : 5126, 
+            "count" : 44, 
+            "max" : [
+                1.3121333122253418, 
+                0.8878674507141113
+            ], 
+            "min" : [
+                -0.11213254928588867, 
+                -0.3121333122253418
+            ], 
+            "type" : "VEC2"
+        }
+    ], 
+    "asset" : {
+        "generator" : "Khronos Blender glTF 2.0 exporter", 
+        "version" : "2.0"
+    }, 
+    "bufferViews" : [
+        {
+            "buffer" : 0, 
+            "byteLength" : 60, 
+            "byteOffset" : 0, 
+            "target" : 34963
+        }, 
+        {
+            "buffer" : 0, 
+            "byteLength" : 528, 
+            "byteOffset" : 60, 
+            "target" : 34962
+        }, 
+        {
+            "buffer" : 0, 
+            "byteLength" : 528, 
+            "byteOffset" : 588, 
+            "target" : 34962
+        }, 
+        {
+            "buffer" : 0, 
+            "byteLength" : 352, 
+            "byteOffset" : 1116, 
+            "target" : 34962
+        }
+    ], 
+    "buffers" : [
+        {
+            "byteLength" : 1468, 
+            "uri" : "data:application/octet-stream;base64,AAECAwQFAwYEBwgJBwoICwwNCw4MDxARDxIQExQVFhcYGRobGRwaHR4fHSAeISIjJCUmJCclKCkqKCspAAAAv5qZmT4BAIC+AAAAv5qZmT7OzAy/Z2Ymv5qZmT7OzMy+AAAAv5qZmT7OzAy/AAAAPwAAAADOzAy/AAAAvwAAAADOzAy/AAAAP5qZmT7OzAy/AAAAP5qZmT4BAIC+AAAAvwAAAAABAIC+AAAAPwAAAAABAIC+AAAAv5qZmT4BAIC+AAAAPwAAAAABAIC+AAAAvwAAAADOzAy/AAAAPwAAAADOzAy/AAAAvwAAAAABAIC+AAAAv5qZmT4BAIC+AAAAP5qZmT7OzAy/AAAAv5qZmT7OzAy/AAAAP5qZmT4BAIC+AAAAPwAAAAABAIC+AAAAPwAAAADOzAy/Z2YmPwAAAADOzMy+AAAAP5qZmT7OzAy/AAAAP5qZmT4BAIC+Z2YmP5qZmT7OzMy+AAAAP5qZmT7OzAy/Z2YmPwAAAADOzMy+AAAAPwAAAADOzAy/Z2YmP5qZmT7OzMy+Z2YmP5qZmT7OzMy+AAAAPwAAAAABAIC+Z2YmPwAAAADOzMy+AAAAP5qZmT4BAIC+AAAAvwAAAADOzAy/AAAAvwAAAAABAIC+Z2YmvwAAAADOzMy+Z2Ymv5qZmT7OzMy+AAAAvwAAAADOzAy/Z2YmvwAAAADOzMy+AAAAv5qZmT7OzAy/AAAAv5qZmT4BAIC+Z2YmvwAAAADOzMy+AAAAvwAAAAABAIC+Z2Ymv5qZmT7OzMy+AAAAgAAAgD8AAACAAAAAgAAAgD8AAACAAAAAgAAAgD8AAACAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgL8AAACAAAAAAAAAgL8AAACAAAAAAAAAgL8AAACAAAAAAAAAgL8AAACAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAgAAAgL8AAAAAAAAAgAAAgL8AAAAAAAAAgAAAgL8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAA9AQ1PwAAAAD0BDW/9AQ1PwAAAAD0BDW/9AQ1PwAAAAD0BDW/9AQ1PwAAAAD0BDW/8gQ1PwAAAAD1BDU/8gQ1PwAAAAD1BDU/8gQ1PwAAAAD1BDU/8gQ1PwAAAAD1BDU/AAAAAAAAgL8AAACAAAAAAAAAgL8AAACAAAAAAAAAgL8AAACA9AQ1vwAAAAD0BDW/9AQ1vwAAAAD0BDW/9AQ1vwAAAAD0BDW/9AQ1vwAAAAD0BDW/8gQ1vwAAAAD1BDU/8gQ1vwAAAAD1BDU/8gQ1vwAAAAD1BDU/8gQ1vwAAAAD1BDU/QM3MPUZLYz9Azcw9cn4WPwDMTL3e5Dw/QM3MPXJ+Fj/UzIw/TmOTPkDNzD1MY5M+1MyMP3R+Fj/UzIw/7M+fvkDNzD0Ay0a81MyMPwDKRrxEzcw98M+fvtTMjD8Ayka8QM3MPUxjkz7UzIw/TmOTPkDNzD0Ay0a8QM3MPUZLYz/UzIw/dH4WP0DNzD1yfhY/1MyMP0hLYz/UzIw/AMpGvNTMjD9OY5M+CACgPwAtDT7UzIw/dH4WP9TMjD9IS2M/DACgP+jkPD/UzIw/dH4WP/zzpz9SY5M+1MyMP05jkz7886c/dH4WP/zzpz/oz5++1MyMPwDKRrz886c/AMpGvNTMjD/sz5++QM3MPUxjkz5Azcw9AMtGvADMTL30LA0+AKXlvXJ+Fj9Azcw9TGOTPgCl5b1IY5M+QM3MPXJ+Fj9Ezcw98M+fvsCl5b0Ay0a8QM3MPQDLRrzApeW98M+fvg=="
+        }
+    ], 
+    "meshes" : [
+        {
+            "name" : "bottom_wall", 
+            "primitives" : [
+                {
+                    "attributes" : {
+                        "NORMAL" : 2, 
+                        "POSITION" : 1, 
+                        "TEXCOORD_0" : 3
+                    }, 
+                    "indices" : 0
+                }
+            ]
+        }
+    ], 
+    "nodes" : [
+        {
+            "mesh" : 0, 
+            "name" : "Cube.006", 
+            "rotation" : [
+                0.0, 
+                8.742277657347586e-08, 
+                -0.0, 
+                1.0
+            ], 
+            "translation" : [
+                -6.5, 
+                0.0, 
+                -5.5
+            ]
+        }
+    ], 
+    "scene" : 0, 
+    "scenes" : [
+        {
+            "name" : "Scene", 
+            "nodes" : [
+                0
+            ]
+        }
+    ]
+}
