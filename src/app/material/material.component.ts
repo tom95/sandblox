@@ -8,7 +8,7 @@ import { Material } from '../material'
   host: {
     '[style.background-color]': 'material.color',
     '[style.background-image]': 'material.texture ? "url(" + material.textureUrl() + ")" : ""',
-    '[style.border]': 'selected ? "4px solid #fff" : "none"',
+    '[style.border]': 'selected ? "4px solid #333" : "none"',
     '[style.margin]': 'selected ? "0" : "4px"',
   }
 })

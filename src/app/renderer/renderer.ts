@@ -2,6 +2,8 @@ import * as TH from 'three'
 
 declare var THREE: any
 
+import { TextureService } from '../texture.service'
+
 import { CameraControls } from './orbit-controls'
 
 import { Material } from '../material'
@@ -26,14 +28,13 @@ export class SBRenderer {
 
   scene = new TH.Scene()
   camera: TH.PerspectiveCamera
-  headLight: TH.PointLight
   control: TransformControls
   cameraControls: any
 
   blocks: TH.Object3D[] = []
   materialPicker: Material
 
-  constructor(container) {
+  constructor(private textureService: TextureService, container: HTMLElement) {
     this.container = container
   }
 
@@ -46,11 +47,31 @@ export class SBRenderer {
     this.resize()
   }
 
+  buildScene () {
+    this.camera = new TH.PerspectiveCamera(60, 1, 0.1, 7000)
+    this.camera.position.set(300, 300, 300)
+
+    const ambient = new TH.AmbientLight(0xffffff, 0.3)
+
+    const light = new TH.DirectionalLight(0xffffff, 0.8)
+    light.position.set(0.5, 0, 0.866)
+
+    this.camera.add(light)
+    this.camera.add(ambient)
+
+    this.scene.add(this.camera)
+    this.scene.add(new TH.AmbientLight(0x333333, 0.3))
+    this.scene.add(new TH.GridHelper(1000, 100, 0x333333, 0x333333))
+    this.scene.add(new TH.GridHelper(1000, 10, 0xffffff, 0xffffff))
+  }
+
   buildRenderer () {
     this.renderer = new TH.WebGLRenderer({
       antialias: true
     })
     this.renderer.autoClear = false
+    this.renderer.toneMappingExposure = 2
+    this.renderer.gammaOutput = true
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.container.appendChild(this.renderer.domElement)
   }
@@ -71,23 +92,6 @@ export class SBRenderer {
     this.cameraControls.rotateSpeed = 0.5
     this.cameraControls.zoomSpeed = 0.6
     this.cameraControls.onUpdate = () => this.setDirty()
-  }
-
-  buildScene () {
-    this.camera = new TH.PerspectiveCamera(45, 1, 0.1, 7000)
-    this.camera.position.set(300, 300, 300)
-
-    this.headLight = new TH.PointLight(0x888888, 1.0)
-
-    const light = new TH.DirectionalLight(0xffffff, 0.5)
-    light.position.set(20, 20, 0)
-
-    this.scene.add(light)
-    this.scene.add(this.camera)
-    this.scene.add(this.headLight)
-    this.scene.add(new TH.AmbientLight(0x333333, 0.3))
-    this.scene.add(new TH.GridHelper(1000, 100, 0x333333, 0x333333))
-    this.scene.add(new TH.GridHelper(1000, 10, 0xffffff, 0xffffff))
   }
 
   registerSelection () {
@@ -125,7 +129,6 @@ export class SBRenderer {
 
   update () {
     this.dirty = false
-    this.headLight.position.copy(this.camera.position)
     this.renderer.clear()
     this.renderer.render(this.outlineScene, this.camera)
     this.renderer.render(this.scene, this.camera)
@@ -138,12 +141,16 @@ export class SBRenderer {
   }
 
   select (object) {
+    if (this.control.object) {
+      this.outlineScene.remove(this.control.object.userData.outlineCopy)
+    }
+
     this.control.attach(object)
 
     if (object.type === 'Group') {
       const copy = new TH.Group()
       object.userData.outlineCopy = copy
-      for (let child of object.children) {
+      for (const child of object.children) {
         copy.add(this.outlineCopyFor(child))
       }
       copy.position.copy(object.position)

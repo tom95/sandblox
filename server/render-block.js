@@ -1,4 +1,4 @@
-const SIZE = 86
+const SIZE = 128
 const Jimp = require('jimp')
 const gl = require('gl')(SIZE, SIZE)
 const THREE = require('three')
@@ -10,7 +10,7 @@ module.exports = class GLRenderer {
     this.scene = new THREE.Scene()
     // this.scene.background = new THREE.Color(0xffffff)
     // this.camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100)
-    const CAMERA_SIZE = 3 / 2
+    const CAMERA_SIZE = 1
     this.camera = new THREE.OrthographicCamera(-CAMERA_SIZE, CAMERA_SIZE, CAMERA_SIZE, -CAMERA_SIZE, 0.1, 100)
     this.scene.add(this.camera)
     this.scene.add(new THREE.AmbientLight(0x333333, 0.7))
@@ -53,7 +53,7 @@ module.exports = class GLRenderer {
     return new Promise((resolve, reject) => {
       new GLTFLoader().load(blockPath, data => {
         const obj = data.scene.children[0]
-        const material = new THREE.MeshStandardMaterial({color: new THREE.Color('#ff0000')})
+        const material = new THREE.MeshStandardMaterial({color: new THREE.Color('#ffffff')})
         obj.position.set(0, 0, 0)
         if (obj.type === 'Group') {
           obj.children.forEach(o => { o.material = material })

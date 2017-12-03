@@ -2,6 +2,8 @@ import { EventEmitter, Output, Input, Component, OnInit } from '@angular/core'
 
 import { Material } from '../material'
 
+import { TextureService } from '../texture.service'
+
 @Component({
   selector: 'sb-material-editor',
   templateUrl: './material-editor.component.html',
@@ -12,9 +14,13 @@ export class MaterialEditorComponent implements OnInit {
   @Input() material: Material
   @Output() change = new EventEmitter<void>()
 
-  constructor() { }
+  constructor(private textureService: TextureService) { }
 
   ngOnInit() {
+  }
+
+  listTextures () {
+    return this.textureService.defaultTextureNames()
   }
 
   updateColor (color) {

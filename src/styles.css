@@ -1,4 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
+
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+
 *, * > * {
   box-sizing: border-box;
 }
@@ -8,7 +11,6 @@ body, html {
   height: 100%;
   margin:  0;
   padding: 0;
-  background: #222;
   overflow: hidden;
 }
 
@@ -50,3 +52,13 @@ body, html {
 .icon-brush:before { content: '\f1fc'; } /* '' */
 .icon-object-group:before { content: '\f247'; } /* '' */
 .icon-object-ungroup:before { content: '\f248'; } /* '' */
+
+.texture-preview {
+  width: 48px;
+  height: 48px;
+  margin: 1px;
+  float: left;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}

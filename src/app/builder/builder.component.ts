@@ -1,7 +1,9 @@
 import { SimpleChanges, OnChanges, Input, HostListener, ElementRef, Component, OnInit, OnDestroy } from '@angular/core'
 
 import { SBRenderer } from '../renderer/renderer'
+
 import { BloxService } from '../blox.service'
+import { TextureService } from '../texture.service'
 
 @Component({
   selector: 'sb-builder',
@@ -18,8 +20,10 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
   renderer: SBRenderer
   running = false
 
-  constructor(private element: ElementRef, private bloxService: BloxService) {
-    this.renderer = new SBRenderer(this.element.nativeElement)
+  constructor(private element: ElementRef,
+              private textureService: TextureService,
+              private bloxService: BloxService) {
+    this.renderer = new SBRenderer(this.textureService, this.element.nativeElement)
   }
 
   ngOnInit() {

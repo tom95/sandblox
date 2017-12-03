@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 
+import { TextureService } from './texture.service'
+
 export class Material {
   id: string
   texture: string
@@ -7,36 +9,28 @@ export class Material {
 
   glMaterial: THREE.MeshStandardMaterial = null
 
-  constructor (color, texture = null) {
+  constructor (private textureService: TextureService, color, texture = null) {
     this.color = color
     this.texture = texture
     this.id = this.generateId()
     this.buildGLMaterial()
   }
 
-  static fromExisting (id, color, texture) {
-    const mat = new Material(color, texture)
-    mat.id = id
-    return mat
-  }
-
   buildGLMaterial () {
     let gltex = null
     if (this.texture) {
-      // TODO move the loader into an injected service
-      gltex = new THREE.TextureLoader().load(this.textureUrl())
-      gltex.wrapS = THREE.RepeatWrapping
-      gltex.wrapT = THREE.RepeatWrapping
+      gltex = this.textureService.load(this.textureUrl())
     }
 
     this.glMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(this.color),
-      map: this.texture ? gltex : null
+      map: this.texture ? gltex : null,
+      envMap: this.textureService.getDefaultEnvMap()
     })
   }
 
   textureUrl () {
-    return `/public/textures/${this.texture}.png`
+    return `/public/textures/${this.texture}`
   }
 
   setColor (color: string) {

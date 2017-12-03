@@ -1,6 +1,7 @@
 import { Output, EventEmitter, Component, OnInit } from '@angular/core'
 import { BloxService } from '../blox.service'
 import { Material } from '../material'
+import { MaterialService } from '../material.service'
 
 @Component({
   selector: 'sb-sidebar',
@@ -15,13 +16,20 @@ export class SidebarComponent implements OnInit {
 
   activeTab = 'blocks'
 
-  materials = [new Material('#ff0000'), new Material('#00ff00'), new Material('#0000ff'), new Material('#ffffff', 'wall')]
+  materials: Material[]
   selectedMaterial: Material = null
 
   blox: {[key: string]: string[]} = {}
   selectedCategory: string = null
 
-  constructor(private bloxService: BloxService) {}
+  constructor(private materialService: MaterialService, private bloxService: BloxService) {
+    this.materials = [
+      this.materialService.create('#ff0000'),
+      this.materialService.create('#00ff00'),
+      this.materialService.create('#0000ff'),
+      this.materialService.create('#ffffff', 'wall.png')
+    ]
+  }
 
   ngOnInit() {
     this.bloxService.loadAllBlox().subscribe(data => {
