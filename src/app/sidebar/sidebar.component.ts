@@ -59,4 +59,13 @@ export class SidebarComponent implements OnInit {
     this.viewDirty.emit()
   }
 
+  showMode(mode: string) {
+    const MODES = [
+      'blocks',
+      'material',
+      'settings'
+    ]
+    this.activeTab = MODES.indexOf(mode)
+  }
+
 }

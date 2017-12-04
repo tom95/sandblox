@@ -1,4 +1,16 @@
-import { SimpleChanges, OnChanges, Input, HostListener, ElementRef, Component, OnInit, OnDestroy } from '@angular/core'
+import {
+  Output,
+  EventEmitter,
+  SimpleChanges,
+  OnChanges,
+  Input,
+  HostListener,
+  ElementRef,
+  Component,
+  OnInit,
+  OnDestroy
+} from '@angular/core'
+import * as THREE from 'three'
 
 import { SBRenderer } from '../renderer/renderer'
 
@@ -16,6 +28,7 @@ import { TextureService } from '../texture.service'
 export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
 
   @Input() materialPicker
+  @Output() changeMode = new EventEmitter<string>()
 
   renderer: SBRenderer
   running = false
@@ -59,6 +72,7 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
   @HostListener('window:keydown', ['$event'])
   shortcutHandler(event) {
     this.renderer.dirty = true
+    console.log(event.key)
 
     switch (event.key) {
       case 's':
@@ -69,6 +83,31 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
         break
       case 'r':
         this.setTransformMode('rotate')
+        break
+      case ' ':
+        this.renderer.rotateSelected()
+        break
+      case 'q':
+        this.changeMode.emit('blocks')
+        break
+      case 'w':
+        this.changeMode.emit('material')
+        break
+      case 'e':
+        this.changeMode.emit('settings')
+        break
+      case 'x':
+      case 'Delete':
+        this.renderer.deleteSelected()
+        break
+      case 'j':
+        this.renderer.flipSelected(new THREE.Vector3(1, -1, 1))
+        break
+      case 'h':
+        this.renderer.flipSelected(new THREE.Vector3(-1, 1, 1))
+        break
+      case 'k':
+        this.renderer.flipSelected(new THREE.Vector3(1, 1, -1))
         break
     }
   }

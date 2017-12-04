@@ -5,4 +5,7 @@
   (transformModeChanged)="builder.setTransformMode($event)"
   (viewDirty)="builder.setDirty()"
   (addBlock)="builder.addBlock($event)"></sb-sidebar>
-<sb-builder [materialPicker]="sidebar.getSelectedMaterial()" #builder></sb-builder>
+<sb-builder
+  #builder
+  (changeMode)="sidebar.showMode($event)"
+  [materialPicker]="sidebar.getSelectedMaterial()"></sb-builder>

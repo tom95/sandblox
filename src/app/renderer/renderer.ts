@@ -1,17 +1,57 @@
 import * as TH from 'three'
 
-declare var THREE: any
-
 import { TextureService } from '../texture.service'
 
 import { CameraControls } from './orbit-controls'
+import { Gizmo } from './gizmo'
 
 import { Material } from '../material'
 
-declare class TransformControls extends TH.TransformControls {
-  setTranslationSnap(value: number)
-  setRotationSnap(value: number)
-  addEventListener(event, func)
+// declare var THREE: any
+export declare namespace THREE {
+  export class Pass {
+    renderToScreen: boolean
+    clear: boolean
+    enabled: boolean
+    needsSwap: boolean
+  }
+  export class CopyShader {}
+  export class GLTFLoader {
+    load(file: string, callback: any)
+  }
+  export class TransformControls extends TH.Object3D {
+    constructor(camera: TH.Camera, elem: HTMLElement)
+    object: TH.Object3D
+    attach(object: TH.Object3D)
+    detach()
+    setMode(mode: string)
+    setTranslationSnap(value: number)
+    setRotationSnap(value: number)
+    addEventListener(event, func)
+  }
+  export class SAOPass extends Pass {
+    constructor(scene: TH.Scene, camera: TH.Camera, depth: boolean, normals: boolean, resolution: TH.Vector2)
+    params: any
+  }
+  export class SSAOPass extends Pass {
+    constructor(scene: TH.Scene, camera: TH.Camera)
+    radius: number
+    lumInfluence: number
+    aoClamp: number
+  }
+  export class EffectComposer {
+    constructor(renderer: TH.Renderer)
+    addPass(pass: any)
+    render()
+    setSize(width: number, height: number)
+  }
+  export class RenderPass extends Pass {
+    constructor(scene: TH.Scene, camera: TH.Camera)
+    clearDepth: boolean
+  }
+  export class ShaderPass extends Pass {
+    constructor(shader: any)
+  }
 }
 
 const BASE_SCALE = 1
@@ -23,14 +63,14 @@ export class SBRenderer {
   container: HTMLElement
 
   composer: THREE.EffectComposer
-  saoPass: THREE.SAOPass
+  ssaoPass: THREE.SSAOPass
   renderer: TH.WebGLRenderer
-  outlineMaterial: THREE.ShaderMaterial
+  outlineMaterial: TH.ShaderMaterial
   outlineScene = new TH.Scene()
 
   scene = new TH.Scene()
   camera: TH.PerspectiveCamera
-  control: TransformControls
+  control: Gizmo
   cameraControls: any
 
   blocks: TH.Object3D[] = []
@@ -61,7 +101,7 @@ export class SBRenderer {
     this.camera.add(light)
     this.camera.add(ambient)
 
-    this.scene.background = new THREE.Color('#cccccc')
+    this.scene.background = new TH.Color(0xcccccc)
     this.scene.add(this.camera)
     this.scene.add(new TH.AmbientLight(0x333333, 0.3))
     // this.scene.add(new TH.GridHelper(1000, 100, 0x333333, 0x333333))
@@ -79,16 +119,34 @@ export class SBRenderer {
     this.container.appendChild(this.renderer.domElement)
 
     this.composer = new THREE.EffectComposer(this.renderer)
-    const renderPass = new THREE.RenderPass(this.scene, this.camera)
-    this.saoPass = new THREE.SAOPass(this.scene, this.camera, true, true, new TH.Vector2(1024, 1024))
-    this.saoPass.renderToScreen = true
 
+    const renderPass = new THREE.RenderPass(this.scene, this.camera)
+    renderPass.clear = true
+    renderPass.renderToScreen = false
     this.composer.addPass(renderPass)
-    this.composer.addPass(this.saoPass)
+
+    this.ssaoPass = new THREE.SSAOPass(this.scene, this.camera)
+    this.ssaoPass.lumInfluence = 1.1
+    this.ssaoPass.renderToScreen = false
+    this.composer.addPass(this.ssaoPass)
+
+    const copyPass = new THREE.ShaderPass(THREE.CopyShader)
+    copyPass.renderToScreen = false
+    this.composer.addPass(copyPass)
+
+    const outlineRenderPass = new THREE.RenderPass(this.outlineScene, this.camera)
+    outlineRenderPass.clear = false
+    outlineRenderPass.clearDepth = true
+    outlineRenderPass.renderToScreen = false
+    this.composer.addPass(outlineRenderPass)
+
+    const copyPass2 = new THREE.ShaderPass(THREE.CopyShader)
+    copyPass2.renderToScreen = true
+    this.composer.addPass(copyPass2)
   }
 
   buildControls () {
-    this.control = new THREE.TransformControls(this.camera, this.renderer.domElement)
+    /*this.control = new THREE.TransformControls(this.camera, this.renderer.domElement)
     this.control.setTranslationSnap(0.1)
     this.control.setRotationSnap(this.degToRad(15))
     this.control.addEventListener('change', () => {
@@ -97,12 +155,24 @@ export class SBRenderer {
       }
       this.setDirty()
     })
-    this.scene.add(this.control)
+    this.scene.add(this.control)*/
+
+    this.control = new Gizmo(this.renderer.domElement, this.camera)
+    this.control.updated.subscribe(() => this.setDirty())
+    this.control.duplicate.subscribe(block => this.duplicateAndSelect(block))
+    this.control.snapIncrement = 0.1
+    this.outlineScene.add(this.control)
 
     this.cameraControls = new CameraControls(this.camera, this.renderer.domElement)
     this.cameraControls.rotateSpeed = 0.5
     this.cameraControls.zoomSpeed = 0.6
     this.cameraControls.onUpdate = () => this.setDirty()
+
+    const light = new TH.DirectionalLight(0xffffff, 0.8)
+    light.position.set(0.5, 0, 0.866)
+    this.outlineScene.background = null
+    this.outlineScene.add(light)
+    this.outlineScene.add(new TH.AmbientLight(0x787878, 0.8))
   }
 
   registerSelection () {
@@ -140,9 +210,6 @@ export class SBRenderer {
 
   update () {
     this.dirty = false
-    this.renderer.clear()
-    // this.renderer.render(this.outlineScene, this.camera)
-    // this.renderer.render(this.scene, this.camera)
     this.composer.render()
   }
 
@@ -154,13 +221,13 @@ export class SBRenderer {
   }
 
   select (object) {
-    if (this.control.object) {
-      this.outlineScene.remove(this.control.object.userData.outlineCopy)
+    if (this.control.target) {
+      this.outlineScene.remove(this.control.target.userData.outlineCopy)
     }
 
     this.control.attach(object)
 
-    if (object.type === 'Group') {
+    /*if (object.type === 'Group') {
       const copy = new TH.Group()
       object.userData.outlineCopy = copy
       for (const child of object.children) {
@@ -172,29 +239,38 @@ export class SBRenderer {
       const copy = this.outlineCopyFor(object)
       this.outlineScene.add(copy)
       object.userData.outlineCopy = copy
-    }
+    }*/
   }
 
   outlineCopyFor (object) {
     const copy = new TH.Mesh(object.geometry, this.outlineMaterial)
-    copy.scale.set(BASE_SCALE + 1, BASE_SCALE + 1, BASE_SCALE + 1)
+    copy.scale.set(BASE_SCALE + 0.01, BASE_SCALE + 0.01, BASE_SCALE + 0.01)
     copy.position.copy(object.position)
     return copy
   }
 
   deselect () {
-    if (this.control.object) {
-      this.outlineScene.remove(this.control.object.userData.outlineCopy)
+    if (this.control.target) {
+      this.outlineScene.remove(this.control.target.userData.outlineCopy)
     }
     this.control.detach()
   }
 
+  duplicateAndSelect (block: TH.Object3D) {
+    const dupl = block.clone()
+    this.blocks.push(dupl)
+    this.scene.add(dupl)
+    this.select(dupl)
+    dupl.position.copy(block.position)
+    return dupl
+  }
+
   setTransformMode (mode) {
-    this.control.setMode(mode)
+    // FIXME this.control.setMode(mode)
   }
 
   buildOutlineMaterial () {
-    this.outlineMaterial = new THREE.ShaderMaterial({
+    this.outlineMaterial = new TH.ShaderMaterial({
       uniforms: {
         offset: { value: 0 / BASE_SCALE }
       },
@@ -220,9 +296,8 @@ export class SBRenderer {
   loadBlock (identifier) {
     new THREE.GLTFLoader().load(`/public/blox/${identifier}.gltf`, data => {
       const block = data.scene.children[0]
-      console.log(block)
       block.scale.set(BASE_SCALE, BASE_SCALE, BASE_SCALE)
-      block.material = new THREE.MeshPhongMaterial(0xffffff)
+      block.material = new TH.MeshPhongMaterial({color: 0xffffff})
       block.position.set(BASE_SCALE / 2, 0, BASE_SCALE / 2)
       this.scene.add(block)
       this.blocks.push(block)
@@ -242,13 +317,41 @@ export class SBRenderer {
     this.materialPicker = material
   }
 
+  rotateSelected () {
+    if (this.control.target) {
+      this.control.target.rotateY(Math.PI / 2)
+      this.setDirty()
+    }
+  }
+
+  deleteSelected () {
+    if (this.control.target) {
+      this.scene.remove(this.control.target)
+      this.blocks.splice(this.blocks.indexOf(this.control.target), 1)
+      this.control.detach()
+      this.setDirty()
+    }
+  }
+
+  flipSelected (vec: TH.Vector3) {
+    // TODO do this with rotations and translations as this flips normals
+    if (this.control.target) {
+      this.control.target.scale.multiply(vec)
+    }
+  }
+
   setExposure (value: number) {
     this.renderer.toneMappingExposure = value
     this.setDirty()
   }
 
   setAmbientOcclusion (value: number) {
-    this.saoPass.params.saoIntensity = value
+    if (value <= 0) {
+      this.ssaoPass.enabled = false
+    } else {
+      this.ssaoPass.enabled = true
+      this.ssaoPass.radius = value
+    }
     this.setDirty()
   }
 }
