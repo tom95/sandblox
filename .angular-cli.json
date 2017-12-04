@@ -28,10 +28,16 @@
 		"../node_modules/three/examples/js/loaders/GLTFLoader.js",
 		"../node_modules/three/examples/js/shaders/CopyShader.js",
 		"../node_modules/three/examples/js/shaders/FXAAShader.js",
+		"../node_modules/three/examples/js/shaders/DepthLimitedBlurShader.js",
+		"../node_modules/three/examples/js/shaders/UnpackDepthRGBAShader.js",
+		"../node_modules/three/examples/js/shaders/SAOShader.js",
+		"../node_modules/three/examples/js/shaders/SSAOShader.js",
 		"../node_modules/three/examples/js/postprocessing/EffectComposer.js",
 		"../node_modules/three/examples/js/postprocessing/ShaderPass.js",
 		"../node_modules/three/examples/js/postprocessing/OutlinePass.js",
-		"../node_modules/three/examples/js/postprocessing/RenderPass.js"
+		"../node_modules/three/examples/js/postprocessing/RenderPass.js",
+		"../node_modules/three/examples/js/postprocessing/SAOPass.js",
+		"../node_modules/three/examples/js/postprocessing/SSAOPass.js"
       ],
       "environmentSource": "environments/environment.ts",
       "environments": {

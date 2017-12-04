@@ -20,6 +20,16 @@ body, html {
   display: table;
 }
 
+.texture-preview {
+  width: 48px;
+  height: 48px;
+  margin: 1px;
+  float: left;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
 @font-face {
   font-family: 'fontello';
   src: url('font/fontello.eot?43068711');
@@ -31,7 +41,7 @@ body, html {
   font-weight: normal;
   font-style: normal;
 }
-[class^="icon-"]:before, [class*=" icon-"]:before {
+.icon:before {
   font-family: "fontello";
   font-style: normal;
   font-weight: normal;
@@ -45,20 +55,16 @@ body, html {
   line-height: 1em;
 }
 .icon-resize-full:before { content: '\e800'; } /* '' */
+.icon-export:before { content: '\e801'; } /* '' */
+.icon-plus:before { content: '\e802'; } /* '' */
+.icon-light-up:before { content: '\e803'; } /* '' */
+.icon-picture:before { content: '\e804'; } /* '' */
+.icon-adjust:before { content: '\e805'; } /* '' */
 .icon-spin3:before { content: '\e832'; } /* '' */
 .icon-marquee:before { content: '\e847'; } /* '' */
 .icon-move:before { content: '\f047'; } /* '' */
 .icon-cube:before { content: '\f1b2'; } /* '' */
+.icon-sliders:before { content: '\f1de'; } /* '' */
 .icon-brush:before { content: '\f1fc'; } /* '' */
 .icon-object-group:before { content: '\f247'; } /* '' */
 .icon-object-ungroup:before { content: '\f248'; } /* '' */
-
-.texture-preview {
-  width: 48px;
-  height: 48px;
-  margin: 1px;
-  float: left;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-}

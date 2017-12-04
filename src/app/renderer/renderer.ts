@@ -14,7 +14,7 @@ declare class TransformControls extends TH.TransformControls {
   addEventListener(event, func)
 }
 
-const BASE_SCALE = 100
+const BASE_SCALE = 1
 
 export class SBRenderer {
 
@@ -22,6 +22,8 @@ export class SBRenderer {
 
   container: HTMLElement
 
+  composer: THREE.EffectComposer
+  saoPass: THREE.SAOPass
   renderer: TH.WebGLRenderer
   outlineMaterial: THREE.ShaderMaterial
   outlineScene = new TH.Scene()
@@ -34,7 +36,7 @@ export class SBRenderer {
   blocks: TH.Object3D[] = []
   materialPicker: Material
 
-  constructor(private textureService: TextureService, container: HTMLElement) {
+  constructor (private textureService: TextureService, container: HTMLElement) {
     this.container = container
   }
 
@@ -48,8 +50,8 @@ export class SBRenderer {
   }
 
   buildScene () {
-    this.camera = new TH.PerspectiveCamera(60, 1, 0.1, 7000)
-    this.camera.position.set(300, 300, 300)
+    this.camera = new TH.PerspectiveCamera(60, 1, 1, 10)
+    this.camera.position.set(3, 3, 3)
 
     const ambient = new TH.AmbientLight(0xffffff, 0.3)
 
@@ -59,10 +61,11 @@ export class SBRenderer {
     this.camera.add(light)
     this.camera.add(ambient)
 
+    this.scene.background = new THREE.Color('#cccccc')
     this.scene.add(this.camera)
     this.scene.add(new TH.AmbientLight(0x333333, 0.3))
-    this.scene.add(new TH.GridHelper(1000, 100, 0x333333, 0x333333))
-    this.scene.add(new TH.GridHelper(1000, 10, 0xffffff, 0xffffff))
+    // this.scene.add(new TH.GridHelper(1000, 100, 0x333333, 0x333333))
+    // this.scene.add(new TH.GridHelper(1000, 10, 0xffffff, 0xffffff))
   }
 
   buildRenderer () {
@@ -74,11 +77,19 @@ export class SBRenderer {
     this.renderer.gammaOutput = true
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.container.appendChild(this.renderer.domElement)
+
+    this.composer = new THREE.EffectComposer(this.renderer)
+    const renderPass = new THREE.RenderPass(this.scene, this.camera)
+    this.saoPass = new THREE.SAOPass(this.scene, this.camera, true, true, new TH.Vector2(1024, 1024))
+    this.saoPass.renderToScreen = true
+
+    this.composer.addPass(renderPass)
+    this.composer.addPass(this.saoPass)
   }
 
   buildControls () {
     this.control = new THREE.TransformControls(this.camera, this.renderer.domElement)
-    this.control.setTranslationSnap(10)
+    this.control.setTranslationSnap(0.1)
     this.control.setRotationSnap(this.degToRad(15))
     this.control.addEventListener('change', () => {
       if (this.control.object) {
@@ -130,14 +141,16 @@ export class SBRenderer {
   update () {
     this.dirty = false
     this.renderer.clear()
-    this.renderer.render(this.outlineScene, this.camera)
-    this.renderer.render(this.scene, this.camera)
+    // this.renderer.render(this.outlineScene, this.camera)
+    // this.renderer.render(this.scene, this.camera)
+    this.composer.render()
   }
 
   resize () {
     this.camera.aspect = this.container.clientWidth / this.container.clientHeight
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(this.container.clientWidth, this.container.clientHeight)
+    this.composer.setSize(this.container.clientWidth, this.container.clientHeight)
   }
 
   select (object) {
@@ -227,5 +240,15 @@ export class SBRenderer {
 
   setMaterialPicker (material: Material) {
     this.materialPicker = material
+  }
+
+  setExposure (value: number) {
+    this.renderer.toneMappingExposure = value
+    this.setDirty()
+  }
+
+  setAmbientOcclusion (value: number) {
+    this.saoPass.params.saoIntensity = value
+    this.setDirty()
   }
 }

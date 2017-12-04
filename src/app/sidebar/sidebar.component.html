@@ -1,4 +1,4 @@
-<mat-tab-group>
+<mat-tab-group [(selectedIndex)]="activeTab">
     <mat-tab>
         <ng-template mat-tab-label><span class="icon icon-cube"></span></ng-template>
 
@@ -24,6 +24,10 @@
                     [selected]="selectedMaterial === material"
                     (click)="selectedMaterial = selectedMaterial === material ? null : material">
                 </sb-material>
+
+                <div class="add-material" (click)="addMaterial()">
+                    <span class="icon icon-plus"></span>
+                </div>
             </div>
 
             <hr>
@@ -36,7 +40,17 @@
     </mat-tab>
 
     <mat-tab>
-        <ng-template mat-tab-label><span class="icon icon-move"></span></ng-template>
+        <ng-template mat-tab-label><span class="icon icon-sliders"></span></ng-template>
+
+        <div class="content">
+            <span class="icon icon-light-up"></span>
+            <mat-slider (input)="setExposure.emit($event.value)" [thumb-label]="true" [min]="0.5" [max]="4.0" [step]="0.1"></mat-slider>
+
+            <br>
+
+            <span class="icon icon-adjust"></span>
+            <mat-slider (input)="setAmbientOcclusion.emit($event.value)" [thumb-label]="true" [min]="0.0" [max]="0.5" [step]="0.01"></mat-slider>
+        </div>
     </mat-tab>
 </mat-tab-group>
 

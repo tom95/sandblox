@@ -12,4 +12,8 @@ export class MaterialService {
     return new Material(this.textureService, color, texture)
   }
 
+  createDefault () {
+    return this.create('#ffffff', null)
+  }
+
 }

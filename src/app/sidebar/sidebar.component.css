@@ -13,3 +13,15 @@
 .content {
   padding: 16px;
 }
+
+.add-material {
+  border-radius: 99px;
+  width: 48px;
+  height: 48px;
+  float: left;
+  border: 2px solid #eee;
+  margin: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

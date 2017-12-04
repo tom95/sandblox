@@ -1,6 +1,8 @@
 <h4>Edit Material<h4>
 
-<input mat-raised-button (change)="updateColor($event)" [value]="material.color" type="color">
+<button mat-raised-button (click)="color.click()">
+  <input #color class="color-button" (change)="updateColor($event)" [value]="material.color" type="color">
+</button>
 
 <button mat-raised-button [matMenuTriggerFor]="menu">
   Texture
@@ -10,6 +12,6 @@
   <div
     *ngFor="let texture of listTextures()"
     class="texture-preview"
-    (click)="material.texture = texture"
+    (click)="material.setTexture(texture)"
     [style.background-image]="'url(/public/textures/' + texture + ')'"></div>
 </mat-menu>

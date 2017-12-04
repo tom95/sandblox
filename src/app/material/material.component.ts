@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import { HostListener, EventEmitter, Output, HostBinding, Input, Component, OnInit } from '@angular/core'
 import { Material } from '../material'
 
@@ -21,6 +22,10 @@ export class MaterialComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
+  }
+
+  brightness (color: string) {
+    return 1 - new THREE.Color(color).getHSL().l
   }
 
 }

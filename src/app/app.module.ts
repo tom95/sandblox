@@ -20,6 +20,7 @@ import { MatGridListModule } from '@angular/material'
 import { MatTabsModule } from '@angular/material'
 import { MatMenuModule } from '@angular/material'
 import { MatButtonModule } from '@angular/material'
+import { MatSliderModule } from '@angular/material'
 
 @NgModule({
   declarations: [
@@ -38,7 +39,8 @@ import { MatButtonModule } from '@angular/material'
     MatGridListModule,
     MatTabsModule,
     MatMenuModule,
-    MatButtonModule
+    MatButtonModule,
+    MatSliderModule
   ],
   providers: [
     BloxService,

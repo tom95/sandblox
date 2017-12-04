@@ -38,6 +38,16 @@ export class Material {
     this.glMaterial.color = new THREE.Color(this.color)
   }
 
+  setTexture (texture: string) {
+    this.texture = texture
+    if (this.texture) {
+      this.glMaterial.map = this.textureService.load(this.textureUrl())
+    } else {
+      this.glMaterial.map = null
+    }
+    this.glMaterial.needsUpdate = true
+  }
+
   generateId () {
     const dict = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     const len = 20

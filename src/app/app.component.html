@@ -1,5 +1,7 @@
 <sb-sidebar
   #sidebar
+  (setExposure)="builder.setExposure($event)"
+  (setAmbientOcclusion)="builder.setAmbientOcclusion($event)"
   (transformModeChanged)="builder.setTransformMode($event)"
   (viewDirty)="builder.setDirty()"
   (addBlock)="builder.addBlock($event)"></sb-sidebar>

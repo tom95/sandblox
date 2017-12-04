@@ -87,4 +87,12 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
     this.renderer.setDirty()
   }
 
+  setExposure (value: number) {
+    this.renderer.setExposure(value)
+  }
+
+  setAmbientOcclusion (value: number) {
+    this.renderer.setAmbientOcclusion(value)
+  }
+
 }
