@@ -1,4 +1,3 @@
-require('require-rebuild')();
 const SIZE = 128
 const Jimp = require('jimp')
 const gl = require('gl')(SIZE, SIZE)
