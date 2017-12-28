@@ -16,6 +16,7 @@ import { SBRenderer } from '../renderer/renderer'
 
 import { BloxService } from '../blox.service'
 import { TextureService } from '../texture.service'
+import { SceneDataService } from '../scene-data.service'
 
 @Component({
   selector: 'sb-builder',
@@ -35,13 +36,27 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
 
   constructor(private element: ElementRef,
               private textureService: TextureService,
+              private sceneDataService: SceneDataService,
               private bloxService: BloxService) {
-    this.renderer = new SBRenderer(this.textureService, this.element.nativeElement)
+    this.renderer = new SBRenderer(this.textureService, this.sceneDataService, this.element.nativeElement)
   }
 
   ngOnInit() {
     this.renderer.build()
     this.running = true
+
+    if (localStorage.lastScene) {
+      let data
+      try {
+        data = JSON.parse(localStorage.lastScene)
+        this.sceneDataService.importSandblox(data, this.renderer)
+      } catch (e) {
+        console.log('Import Error:', e)
+        console.log(localStorage.lastScene)
+        delete localStorage.lastScene
+      }
+    }
+
     this.step()
   }
 
@@ -60,7 +75,42 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   addBlock(identifier: string) {
-    this.renderer.loadBlock(identifier)
+    this.renderer.addBlock(identifier)
+  }
+
+  exportScene(format: string) {
+    let promise, mimetype
+    switch (format) {
+      case 'gltf':
+        promise = this.renderer.exportGLTF(false).then(data => JSON.stringify(data))
+        mimetype = 'model/gltf+json'
+        break
+      case 'glb':
+        promise = this.renderer.exportGLTF(true).then(data => JSON.stringify(data))
+        // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#mime-type
+        mimetype = 'model/gltf-binary'
+        break
+      case 'x3d':
+        promise = this.renderer.exportX3D()
+        mimetype = 'application/xml'
+        break
+      default:
+        throw new Error('Invalid format')
+    }
+
+    return promise.then(data => {
+      this.download(data, 'scene.' + format)
+    })
+  }
+
+  download(data, name) {
+    const a = window.document.createElement('a')
+    a.href = window.URL.createObjectURL(new Blob([data], {type: 'text/plain'}))
+    a.download = name
+
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
 
   @HostListener('window:resize')
@@ -69,21 +119,17 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
     this.renderer.resize()
   }
 
+  @HostListener('window:beforeunload')
+  saveSceneLocally() {
+    localStorage.lastScene = JSON.stringify(this.sceneDataService.exportSandblox())
+  }
+
   @HostListener('window:keydown', ['$event'])
   shortcutHandler(event) {
     this.renderer.dirty = true
     console.log(event.key)
 
     switch (event.key) {
-      case 's':
-        this.setTransformMode('scale')
-        break
-      case 'g':
-        this.setTransformMode('translate')
-        break
-      case 'r':
-        this.setTransformMode('rotate')
-        break
       case ' ':
         this.renderer.rotateSelected()
         break
@@ -95,6 +141,9 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
         break
       case 'e':
         this.changeMode.emit('settings')
+        break
+      case 'r':
+        this.changeMode.emit('export')
         break
       case 'x':
       case 'Delete':

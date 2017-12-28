@@ -2,6 +2,7 @@ import { Output, EventEmitter, Component, OnInit } from '@angular/core'
 import { BloxService } from '../blox.service'
 import { Material } from '../material'
 import { MaterialService } from '../material.service'
+import { SceneDataService } from '../scene-data.service'
 
 @Component({
   selector: 'sb-sidebar',
@@ -12,6 +13,8 @@ export class SidebarComponent implements OnInit {
 
   @Output() setExposure = new EventEmitter<number>()
   @Output() setAmbientOcclusion = new EventEmitter<number>()
+
+  @Output() exportScene = new EventEmitter<string>()
 
   @Output() transformModeChanged = new EventEmitter<string>()
   @Output() addBlock = new EventEmitter<string>()
@@ -25,14 +28,9 @@ export class SidebarComponent implements OnInit {
   blox: {[key: string]: string[]} = {}
   selectedCategory: string = null
 
-  constructor(private materialService: MaterialService, private bloxService: BloxService) {
-    this.materials = [
-      this.materialService.create('#ff0000'),
-      this.materialService.create('#00ff00'),
-      this.materialService.create('#0000ff'),
-      this.materialService.create('#ffffff', 'wall.png')
-    ]
-  }
+  constructor(private materialService: MaterialService,
+              private bloxService: BloxService,
+              public sceneDataService: SceneDataService) { }
 
   ngOnInit() {
     this.bloxService.loadAllBlox().subscribe(data => {
@@ -47,7 +45,7 @@ export class SidebarComponent implements OnInit {
 
   addMaterial() {
     const mat = this.materialService.createDefault()
-    this.materials.push(mat)
+    this.sceneDataService.materials.push(mat)
     this.selectedMaterial = mat
   }
 
@@ -63,9 +61,20 @@ export class SidebarComponent implements OnInit {
     const MODES = [
       'blocks',
       'material',
-      'settings'
+      'settings',
+      'export'
     ]
     this.activeTab = MODES.indexOf(mode)
+  }
+
+  updateExposure(value: number) {
+    this.setExposure.emit(value)
+    this.sceneDataService.environment.exposure = value
+  }
+
+  updateAmbientOcclusion(value: number) {
+    this.setAmbientOcclusion.emit(value)
+    this.sceneDataService.environment.ambientOcclusion = value
   }
 
 }

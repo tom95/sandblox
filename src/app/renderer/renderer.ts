@@ -1,7 +1,10 @@
 import * as TH from 'three'
 
 import { TextureService } from '../texture.service'
+import { SceneDataService } from '../scene-data.service'
 
+import { GLTFExporter } from './gltf-exporter'
+import { X3DExporter } from './x3d-exporter'
 import { CameraControls } from './orbit-controls'
 import { Gizmo } from './gizmo'
 
@@ -73,10 +76,14 @@ export class SBRenderer {
   control: Gizmo
   cameraControls: any
 
-  blocks: TH.Object3D[] = []
+  blockGeometries: TH.BufferGeometry[] = []
   materialPicker: Material
 
-  constructor (private textureService: TextureService, container: HTMLElement) {
+  defaultMaterial: TH.MeshStandardMaterial = null
+
+  constructor (private textureService: TextureService,
+               private sceneDataService: SceneDataService,
+               container: HTMLElement) {
     this.container = container
   }
 
@@ -256,9 +263,9 @@ export class SBRenderer {
     this.control.detach()
   }
 
-  duplicateAndSelect (block: TH.Object3D) {
-    const dupl = block.clone()
-    this.blocks.push(dupl)
+  duplicateAndSelect (block: TH.Mesh) {
+    const dupl = block.clone() as TH.Mesh
+    this.sceneDataService.blocks.push(dupl)
     this.scene.add(dupl)
     this.select(dupl)
     dupl.position.copy(block.position)
@@ -293,15 +300,39 @@ export class SBRenderer {
     return deg * Math.PI / 180
   }
 
-  loadBlock (identifier) {
-    new THREE.GLTFLoader().load(`/public/blox/${identifier}.gltf`, data => {
-      const block = data.scene.children[0]
+  getDefaultMaterial () {
+    if (!this.defaultMaterial) {
+      this.defaultMaterial = new TH.MeshStandardMaterial()
+    }
+    return this.defaultMaterial
+  }
+
+  addBlock (identifier): Promise<TH.Mesh> {
+    return this.loadBlock(identifier).then(geometry => {
+      const block = new TH.Mesh(geometry, this.getDefaultMaterial())
       block.scale.set(BASE_SCALE, BASE_SCALE, BASE_SCALE)
-      block.material = new TH.MeshPhongMaterial({color: 0xffffff})
       block.position.set(BASE_SCALE / 2, 0, BASE_SCALE / 2)
+      block.userData.block = identifier
       this.scene.add(block)
-      this.blocks.push(block)
+      this.sceneDataService.blocks.push(block)
       this.setDirty()
+      return block
+    })
+  }
+
+  loadBlock (identifier): Promise<TH.BufferGeometry> {
+    let geometry = this.blockGeometries[identifier]
+    if (geometry) {
+      return Promise.resolve(geometry)
+    }
+
+    return new Promise((resolve, reject) => {
+      new THREE.GLTFLoader().load(`/public/blox/${identifier}.gltf`, data => {
+        geometry = data.scene.children[0].geometry as TH.BufferGeometry
+        geometry.name = identifier
+        this.blockGeometries[identifier] = geometry
+        resolve(geometry)
+      })
     })
   }
 
@@ -310,7 +341,7 @@ export class SBRenderer {
   }
 
   selectableObjects () {
-    return this.blocks
+    return this.sceneDataService.blocks
   }
 
   setMaterialPicker (material: Material) {
@@ -327,7 +358,7 @@ export class SBRenderer {
   deleteSelected () {
     if (this.control.target) {
       this.scene.remove(this.control.target)
-      this.blocks.splice(this.blocks.indexOf(this.control.target), 1)
+      this.sceneDataService.blocks.splice(this.sceneDataService.blocks.indexOf(this.control.target as TH.Mesh), 1)
       this.control.detach()
       this.setDirty()
     }
@@ -348,10 +379,31 @@ export class SBRenderer {
   setAmbientOcclusion (value: number) {
     if (value <= 0) {
       this.ssaoPass.enabled = false
+      this.ssaoPass.radius = 0
     } else {
       this.ssaoPass.enabled = true
       this.ssaoPass.radius = value
     }
     this.setDirty()
+  }
+
+  exportGLTF (binary = false) {
+    return new Promise((resolve, reject) => {
+      new GLTFExporter().parse(this.scene, function (data) {
+        resolve(data)
+      }, {binary: true})
+    })
+  }
+
+  exportX3D () {
+    return Promise.resolve(new X3DExporter().export(this.sceneDataService.blocks))
+  }
+
+  clearScene () {
+    for (const b of this.sceneDataService.blocks) {
+      this.scene.remove(b)
+    }
+
+    this.sceneDataService.blocks = []
   }
 }

@@ -10,6 +10,7 @@ import { ToolbarComponent } from './toolbar/toolbar.component'
 import { BloxService } from './blox.service'
 import { TextureService } from './texture.service'
 import { MaterialService } from './material.service'
+import { SceneDataService } from './scene-data.service'
 
 import { BuilderComponent } from './builder/builder.component'
 import { BlockComponent } from './block/block.component'
@@ -45,7 +46,8 @@ import { MatSliderModule } from '@angular/material'
   providers: [
     BloxService,
     TextureService,
-    MaterialService
+    MaterialService,
+    SceneDataService
   ],
   bootstrap: [AppComponent]
 })

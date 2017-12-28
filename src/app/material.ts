@@ -57,4 +57,11 @@ export class Material {
     }
     return out
   }
+
+  export () {
+    return {
+      color: this.color,
+      texture: this.texture
+    }
+  }
 }
