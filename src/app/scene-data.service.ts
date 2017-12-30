@@ -100,12 +100,14 @@ export class SceneDataService {
 
   moveBlock (id: string, position: THREE.Vector3) {
     this.blockMap[id].position.copy(position)
+    this.renderer.updateSelectionBoxes()
     this.renderer.setDirty()
     this.broadcast('moveBlock', [id, position])
   }
 
   rotateBlock (id: string, rotation: number) {
     this.blockMap[id].rotation.set(0, TH.Math.degToRad(rotation), 0)
+    this.renderer.updateSelectionBoxes()
     this.renderer.setDirty()
     this.broadcast('rotateBlock', [id, rotation])
   }
