@@ -60,6 +60,7 @@ export class Material {
 
   export () {
     return {
+      id: this.id,
       color: this.color,
       texture: this.texture
     }

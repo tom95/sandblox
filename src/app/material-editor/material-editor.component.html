@@ -12,6 +12,6 @@
   <div
     *ngFor="let texture of listTextures()"
     class="texture-preview"
-    (click)="material.setTexture(texture)"
+    (click)="updateTexture(texture)"
     [style.background-image]="'url(/public/textures/' + texture + ')'"></div>
 </mat-menu>

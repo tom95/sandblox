@@ -18,6 +18,11 @@ export declare namespace THREE {
     enabled: boolean
     needsSwap: boolean
   }
+  export class BoxHelper extends TH.LineSegments {
+    constructor(object?: TH.Object3D, color?: TH.Color|number)
+    update()
+    setFromObject(object: TH.Object3D)
+  }
   export class CopyShader {}
   export class GLTFLoader {
     load(file: string, callback: any)
@@ -80,11 +85,14 @@ export class SBRenderer {
   materialPicker: Material
 
   defaultMaterial: TH.MeshStandardMaterial = null
+  userSelectionBoxes: {[id: string]: THREE.BoxHelper} = {}
+  myUserId: string = null
 
   constructor (private textureService: TextureService,
                private sceneDataService: SceneDataService,
                container: HTMLElement) {
     this.container = container
+    this.sceneDataService.renderer = this
   }
 
   build () {
@@ -153,19 +161,15 @@ export class SBRenderer {
   }
 
   buildControls () {
-    /*this.control = new THREE.TransformControls(this.camera, this.renderer.domElement)
-    this.control.setTranslationSnap(0.1)
-    this.control.setRotationSnap(this.degToRad(15))
-    this.control.addEventListener('change', () => {
-      if (this.control.object) {
-        this.control.object.userData.outlineCopy.position.copy(this.control.object.position)
-      }
-      this.setDirty()
-    })
-    this.scene.add(this.control)*/
-
     this.control = new Gizmo(this.renderer.domElement, this.camera)
-    this.control.updated.subscribe(() => this.setDirty())
+    this.control.updated.subscribe(() => {
+      this.setDirty()
+      this.updateSelectionBoxes()
+      // FIXME: try this. this.sceneDataService.moveBlock(this.control.target.userData.blockId, position)
+    })
+    this.control.finishUpdate.subscribe(position => {
+      this.sceneDataService.moveBlock(this.control.target.userData.blockId, position)
+    })
     this.control.duplicate.subscribe(block => this.duplicateAndSelect(block))
     this.control.snapIncrement = 0.1
     this.outlineScene.add(this.control)
@@ -204,13 +208,15 @@ export class SBRenderer {
       const intersects = raycaster.intersectObjects(this.selectableObjects(), true)
       if (intersects.length) {
         if (this.materialPicker) {
-          (<TH.Mesh> intersects[0].object).material = this.materialPicker.glMaterial
+          const block = (<TH.Mesh> intersects[0].object).userData.blockId
+          console.log(this.materialPicker)
+          this.sceneDataService.setMaterial(block, this.materialPicker.id)
         } else {
           const picked = intersects[0].object
-          this.select(picked.parent.type === 'Group' ? picked.parent : picked)
+          this.sceneDataService.selectBlock((picked.parent.type === 'Group' ? picked.parent : picked).userData.blockId, this.myUserId)
         }
       } else {
-        this.deselect()
+        this.sceneDataService.deselect()
       }
     })
   }
@@ -227,53 +233,50 @@ export class SBRenderer {
     this.composer.setSize(this.container.clientWidth, this.container.clientHeight)
   }
 
-  select (object) {
-    if (this.control.target) {
-      this.outlineScene.remove(this.control.target.userData.outlineCopy)
+  updateSelectionBoxes () {
+    for (const box of Object.values(this.userSelectionBoxes)) {
+      box.update()
     }
+  }
 
-    this.control.attach(object)
+  select (object: TH.Mesh, userId: string) {
+    this.userSelectionBoxes[userId].visible = !!object
 
-    /*if (object.type === 'Group') {
-      const copy = new TH.Group()
-      object.userData.outlineCopy = copy
-      for (const child of object.children) {
-        copy.add(this.outlineCopyFor(child))
+    if (object) {
+      if (userId === this.myUserId) {
+        this.control.attach(object)
       }
-      copy.position.copy(object.position)
-      this.outlineScene.add(copy)
-    } else {
-      const copy = this.outlineCopyFor(object)
-      this.outlineScene.add(copy)
-      object.userData.outlineCopy = copy
-    }*/
-  }
-
-  outlineCopyFor (object) {
-    const copy = new TH.Mesh(object.geometry, this.outlineMaterial)
-    copy.scale.set(BASE_SCALE + 0.01, BASE_SCALE + 0.01, BASE_SCALE + 0.01)
-    copy.position.copy(object.position)
-    return copy
-  }
-
-  deselect () {
-    if (this.control.target) {
-      this.outlineScene.remove(this.control.target.userData.outlineCopy)
+      this.userSelectionBoxes[userId].setFromObject(object)
+    } else if (userId === this.myUserId) {
+      this.control.detach()
     }
-    this.control.detach()
+
+    this.setDirty()
+  }
+
+  addUser (userId: string, color: string, isSelf: boolean) {
+    if (!this.userSelectionBoxes[userId]) {
+      const helper = new THREE.BoxHelper(undefined, new TH.Color(color))
+      this.userSelectionBoxes[userId] = helper
+      this.scene.add(helper)
+    }
+    if (isSelf) {
+      this.myUserId = userId
+    }
+  }
+
+  removeUser (userId) {
+    this.scene.remove(this.userSelectionBoxes[userId])
+    delete this.userSelectionBoxes[userId]
   }
 
   duplicateAndSelect (block: TH.Mesh) {
     const dupl = block.clone() as TH.Mesh
     this.sceneDataService.blocks.push(dupl)
     this.scene.add(dupl)
-    this.select(dupl)
+    this.select(dupl, this.myUserId)
     dupl.position.copy(block.position)
     return dupl
-  }
-
-  setTransformMode (mode) {
-    // FIXME this.control.setMode(mode)
   }
 
   buildOutlineMaterial () {
@@ -296,10 +299,6 @@ export class SBRenderer {
     this.outlineMaterial.depthWrite = false
   }
 
-  degToRad (deg) {
-    return deg * Math.PI / 180
-  }
-
   getDefaultMaterial () {
     if (!this.defaultMaterial) {
       this.defaultMaterial = new TH.MeshStandardMaterial()
@@ -307,14 +306,14 @@ export class SBRenderer {
     return this.defaultMaterial
   }
 
-  addBlock (identifier): Promise<TH.Mesh> {
-    return this.loadBlock(identifier).then(geometry => {
+  addBlock (blockName: string, id: string): Promise<TH.Mesh> {
+    return this.loadBlock(blockName).then(geometry => {
       const block = new TH.Mesh(geometry, this.getDefaultMaterial())
       block.scale.set(BASE_SCALE, BASE_SCALE, BASE_SCALE)
       block.position.set(BASE_SCALE / 2, 0, BASE_SCALE / 2)
-      block.userData.block = identifier
+      block.userData.block = blockName
+      block.userData.blockId = id
       this.scene.add(block)
-      this.sceneDataService.blocks.push(block)
       this.setDirty()
       return block
     })
@@ -329,6 +328,10 @@ export class SBRenderer {
     return new Promise((resolve, reject) => {
       new THREE.GLTFLoader().load(`/public/blox/${identifier}.gltf`, data => {
         geometry = data.scene.children[0].geometry as TH.BufferGeometry
+        if (!geometry) {
+          console.log(data)
+          return alert('Error: Could not find geometry in downloaded gltf block!')
+        }
         geometry.name = identifier
         this.blockGeometries[identifier] = geometry
         resolve(geometry)
@@ -348,27 +351,9 @@ export class SBRenderer {
     this.materialPicker = material
   }
 
-  rotateSelected () {
-    if (this.control.target) {
-      this.control.target.rotateY(Math.PI / 2)
-      this.setDirty()
-    }
-  }
-
-  deleteSelected () {
-    if (this.control.target) {
-      this.scene.remove(this.control.target)
-      this.sceneDataService.blocks.splice(this.sceneDataService.blocks.indexOf(this.control.target as TH.Mesh), 1)
-      this.control.detach()
-      this.setDirty()
-    }
-  }
-
-  flipSelected (vec: TH.Vector3) {
-    // TODO do this with rotations and translations as this flips normals
-    if (this.control.target) {
-      this.control.target.scale.multiply(vec)
-    }
+  deleteBlock (block) {
+    this.scene.remove(block)
+    this.setDirty()
   }
 
   setExposure (value: number) {

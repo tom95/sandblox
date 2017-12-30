@@ -8,7 +8,8 @@ export class Gizmo extends THREE.Object3D {
   target: THREE.Object3D
   snapIncrement = 0
 
-  updated = new EventEmitter<void>()
+  updated = new EventEmitter<THREE.Vector3>()
+  finishUpdate = new EventEmitter<THREE.Vector3>()
   duplicate = new EventEmitter<THREE.Object3D>()
 
   constructor (private container: HTMLElement, private camera: THREE.Camera) {
@@ -90,7 +91,7 @@ export class Gizmo extends THREE.Object3D {
     const point = new THREE.Vector3()
 
     this.container.addEventListener('mousedown', event => {
-      if (!hovered) {
+      if (!hovered || !this.target) {
         return false
       }
       this.orientationPlane.quaternion.setFromUnitVectors(hovered.userData.plane, new THREE.Vector3(0, 1, 0))
@@ -110,6 +111,9 @@ export class Gizmo extends THREE.Object3D {
       }
     })
     this.container.addEventListener('mouseup', event => {
+      if (down) {
+        this.finishUpdate.emit(this.position)
+      }
       down = false
     })
     this.container.addEventListener('mousemove', event => {
@@ -143,7 +147,7 @@ export class Gizmo extends THREE.Object3D {
           this.target.position.z = Math.round(this.target.position.z / this.snapIncrement) * this.snapIncrement
         }
         this.position.copy(this.target.position)
-        this.updated.emit()
+        this.updated.emit(this.position)
         return true
       }
     }, false)
@@ -155,7 +159,7 @@ export class Gizmo extends THREE.Object3D {
     }
     const material = arrow.material as THREE.MeshStandardMaterial
     material.color = new THREE.Color(highlight ? 0x4444ff : 0xffffff)
-    this.updated.emit()
+    this.updated.emit(this.position)
   }
 
   intersects (event: any, objects: THREE.Mesh[]) {

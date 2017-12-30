@@ -41,11 +41,12 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
     this.renderer = new SBRenderer(this.textureService, this.sceneDataService, this.element.nativeElement)
   }
 
-  ngOnInit() {
+  ngOnInit () {
     this.renderer.build()
     this.running = true
 
-    if (localStorage.lastScene) {
+    // reenable in case of failure to load data from server to prevent dataloss
+    /* if (localStorage.lastScene) {
       let data
       try {
         data = JSON.parse(localStorage.lastScene)
@@ -55,30 +56,26 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
         console.log(localStorage.lastScene)
         delete localStorage.lastScene
       }
-    }
+    } */
 
     this.step()
   }
 
-  ngOnDestroy() {
+  ngOnDestroy () {
     this.running = false
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges (changes: SimpleChanges) {
     if (changes.materialPicker !== undefined) {
       this.renderer.setMaterialPicker(changes.materialPicker.currentValue)
     }
   }
 
-  setTransformMode(mode: string) {
-    this.renderer.setTransformMode(mode)
+  addBlock (identifier: string) {
+    this.sceneDataService.addBlock(identifier)
   }
 
-  addBlock(identifier: string) {
-    this.renderer.addBlock(identifier)
-  }
-
-  exportScene(format: string) {
+  exportScene (format: string) {
     let promise, mimetype
     switch (format) {
       case 'gltf':
@@ -131,7 +128,7 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
 
     switch (event.key) {
       case ' ':
-        this.renderer.rotateSelected()
+        this.sceneDataService.rotateSelectedBlock()
         break
       case 'q':
         this.changeMode.emit('blocks')
@@ -147,17 +144,17 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
         break
       case 'x':
       case 'Delete':
-        this.renderer.deleteSelected()
+        this.sceneDataService.deleteSelectedBlock()
         break
-      case 'j':
-        this.renderer.flipSelected(new THREE.Vector3(1, -1, 1))
+      /*case 'j':
+        this.sceneDataService.flipSelected(new THREE.Vector3(1, -1, 1))
         break
       case 'h':
-        this.renderer.flipSelected(new THREE.Vector3(-1, 1, 1))
+        this.sceneDataService.flipSelected(new THREE.Vector3(-1, 1, 1))
         break
       case 'k':
-        this.renderer.flipSelected(new THREE.Vector3(1, 1, -1))
-        break
+        this.sceneDataService.flipSelected(new THREE.Vector3(1, 1, -1))
+        break*/
     }
   }
 
@@ -174,13 +171,4 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
   setDirty() {
     this.renderer.setDirty()
   }
-
-  setExposure (value: number) {
-    this.renderer.setExposure(value)
-  }
-
-  setAmbientOcclusion (value: number) {
-    this.renderer.setAmbientOcclusion(value)
-  }
-
 }
