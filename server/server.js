@@ -141,13 +141,11 @@ app.get('/thumb/:category/:name', (req, res) =>
   res
     .set('Content-Type', 'image/png')
     .send(blockThumbs[req.params.category + '/' + req.params.name]))
-app.get('/', (req, res) => res.sendFile('index.html', {root: path.join(__dirname, 'public')}))
-/* app.get('/socket.io/socket.io.js', (req, res) => {
-  console.log('SENDING')
-  res.sendFile('node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.js')
-}) */
+
 app.use('/public', express.static(path.join(__dirname, 'public')))
-app.use('/node_modules', express.static('node_modules'))
+app.use('/node_modules', express.static(path.join(__dirname, '..', 'node_modules')))
+app.use(express.static(path.join(__dirname, '..', 'dist')))
+
 app.use((req, res, next) => {
   console.log('404', req.path)
   res.sendStatus(404)
