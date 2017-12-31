@@ -24,6 +24,8 @@ export class SceneDataService {
   materials: Material[] = []
   materialMap: {[id: string]: Material} = {}
 
+  users: {[id: string]: string} = {}
+
   renderer: SBRenderer
 
   ownUpdate = false
@@ -43,6 +45,10 @@ export class SceneDataService {
     this.blocks = []
 
     this.socket.on('setScene', scene => this.importSandblox(scene, this.renderer))
+    this.socket.on('disconnect', () => {
+      this.users = {}
+      this.renderer.removeAllUsers()
+    })
 
     for (const message of [
       'moveBlock',
@@ -79,11 +85,14 @@ export class SceneDataService {
     if (isSelf) {
       this.myUserId = userId
     }
+
+    this.users[userId] = color
     this.renderer.addUser(userId, color, isSelf)
   }
 
   removeUser (userId) {
     this.renderer.removeUser(userId)
+    delete this.users[userId]
   }
 
   setExposure (exposure) {
@@ -113,8 +122,10 @@ export class SceneDataService {
   }
 
   rotateSelectedBlock () {
-    this.rotateBlock(this.selectedBlock.userData.blockId,
-                     TH.Math.radToDeg(this.selectedBlock.rotation.y + Math.PI / 2))
+    if (this.selectedBlock) {
+      this.rotateBlock(this.selectedBlock.userData.blockId,
+                       TH.Math.radToDeg(this.selectedBlock.rotation.y + Math.PI / 2))
+    }
   }
 
   deleteBlock (id: string) {

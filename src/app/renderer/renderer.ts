@@ -257,6 +257,8 @@ export class SBRenderer {
   addUser (userId: string, color: string, isSelf: boolean) {
     if (!this.userSelectionBoxes[userId]) {
       const helper = new THREE.BoxHelper(undefined, new TH.Color(color))
+      helper.material = new TH.LineBasicMaterial({ color: color, linewidth: 5 })
+      helper.visible = false
       this.userSelectionBoxes[userId] = helper
       this.scene.add(helper)
     }
@@ -268,6 +270,13 @@ export class SBRenderer {
   removeUser (userId) {
     this.scene.remove(this.userSelectionBoxes[userId])
     delete this.userSelectionBoxes[userId]
+  }
+
+  removeAllUsers () {
+    for (const [id, box] of Object.entries(this.userSelectionBoxes)) {
+      this.scene.remove(box)
+      delete this.userSelectionBoxes[id]
+    }
   }
 
   duplicateAndSelect (block: TH.Mesh) {

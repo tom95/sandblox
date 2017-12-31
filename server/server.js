@@ -40,7 +40,7 @@ let currentUsers = {}
 io.on('connection', socket => {
   console.log('Socket connected.')
 
-  const color = [
+  const COLORS = [
     '#F44336',
     '#E91E63',
     '#9C27B0',
@@ -58,7 +58,10 @@ io.on('connection', socket => {
     '#FF9800',
     '#FF5722',
     '#795548'
-  ][currentColorIndex++]
+  ]
+
+  const color = COLORS[currentColorIndex]
+  currentColorIndex = (currentColorIndex + 1) % COLORS.length
 
   socket.emit('setScene', scene)
   socket.emit('addUser', [socket.id, color, true])

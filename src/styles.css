@@ -68,3 +68,5 @@ body, html {
 .icon-brush:before { content: '\f1fc'; } /* '' */
 .icon-object-group:before { content: '\f247'; } /* '' */
 .icon-object-ungroup:before { content: '\f248'; } /* '' */
+.icon-user:before { content: '\e806'; } /* '' */
+.icon-arrows-cw:before { content: '\e807'; } /* '' */

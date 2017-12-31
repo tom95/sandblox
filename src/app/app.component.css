@@ -1,0 +1,16 @@
+
+.user-list {
+  right: 1em;
+  top: 1em;
+  position: absolute;
+}
+
+.user {
+  width: 200px;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  font-family: Roboto;
+  font-size: 0.8rem;
+  color: #fff;
+}
