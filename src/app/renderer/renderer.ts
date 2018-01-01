@@ -280,12 +280,9 @@ export class SBRenderer {
   }
 
   duplicateAndSelect (block: TH.Mesh) {
-    const dupl = block.clone() as TH.Mesh
-    this.sceneDataService.blocks.push(dupl)
-    this.scene.add(dupl)
-    this.select(dupl, this.myUserId)
-    dupl.position.copy(block.position)
-    return dupl
+    const id = this.sceneDataService.addBlock(block.userData.block, null, true)
+    this.sceneDataService.moveBlock(id, block.position)
+    this.sceneDataService.selectBlock(id, this.myUserId)
   }
 
   buildOutlineMaterial () {
@@ -315,34 +312,41 @@ export class SBRenderer {
     return this.defaultMaterial
   }
 
-  addBlock (blockName: string, id: string): Promise<TH.Mesh> {
-    return this.loadBlock(blockName).then(geometry => {
-      const block = new TH.Mesh(geometry, this.getDefaultMaterial())
-      block.scale.set(BASE_SCALE, BASE_SCALE, BASE_SCALE)
-      block.position.set(BASE_SCALE / 2, 0, BASE_SCALE / 2)
-      block.userData.block = blockName
-      block.userData.blockId = id
-      this.scene.add(block)
-      this.setDirty()
-      return block
-    })
+  addBlockImmediateOrFail (blockName: string, id: string): TH.Mesh {
+    const geometry = this.blockGeometries[blockName]
+    if (!geometry) {
+      throw new Error('Geometry for ' + blockName + ' is not loaded.')
+    }
+
+    const block = new TH.Mesh(geometry, this.getDefaultMaterial())
+    block.scale.set(BASE_SCALE, BASE_SCALE, BASE_SCALE)
+    block.position.set(BASE_SCALE / 2, 0, BASE_SCALE / 2)
+    block.userData.block = blockName
+    block.userData.blockId = id
+    this.scene.add(block)
+    this.setDirty()
+    return block
   }
 
-  loadBlock (identifier): Promise<TH.BufferGeometry> {
-    let geometry = this.blockGeometries[identifier]
+  addBlock (blockName: string, id: string): Promise<TH.Mesh> {
+    return this.loadBlock(blockName).then(() => this.addBlockImmediateOrFail(blockName, id))
+  }
+
+  loadBlock (blockName): Promise<TH.BufferGeometry> {
+    let geometry = this.blockGeometries[blockName]
     if (geometry) {
       return Promise.resolve(geometry)
     }
 
     return new Promise((resolve, reject) => {
-      new THREE.GLTFLoader().load(`/public/blox/${identifier}.gltf`, data => {
+      new THREE.GLTFLoader().load(`/public/blox/${blockName}.gltf`, data => {
         geometry = data.scene.children[0].geometry as TH.BufferGeometry
         if (!geometry) {
           console.log(data)
           return alert('Error: Could not find geometry in downloaded gltf block!')
         }
-        geometry.name = identifier
-        this.blockGeometries[identifier] = geometry
+        geometry.name = blockName
+        this.blockGeometries[blockName] = geometry
         resolve(geometry)
       })
     })
@@ -383,9 +387,13 @@ export class SBRenderer {
 
   exportGLTF (binary = false) {
     return new Promise((resolve, reject) => {
-      new GLTFExporter().parse(this.scene, function (data) {
+      const exportScene = new TH.Scene()
+      for (const block of this.sceneDataService.blocks) { exportScene.add(block) }
+
+      new GLTFExporter().parse(exportScene, data => {
+        for (const block of this.sceneDataService.blocks) { this.scene.add(block) }
         resolve(data)
-      }, {binary: true})
+      }, {binary})
     })
   }
 

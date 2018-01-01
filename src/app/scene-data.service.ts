@@ -142,14 +142,28 @@ export class SceneDataService {
     }
   }
 
-  addBlock (blockName: string, id: string = null) {
+  /**
+   * Adds the block identified by blockName to the scene. If no id is given,
+   * one will be generated and returned. If requireImmediate is true, the block
+   * will only be added if the necessary data exists in the cache. Otherwise an
+   * error will be thrown.
+   */
+  addBlock (blockName: string, id: string = null, requireImmediate = false) {
     id = id || this.generateId()
 
-    this.renderer.addBlock(blockName, id).then(block => {
+    if (!requireImmediate) {
+      this.renderer.addBlock(blockName, id).then(block => {
+        this.blockMap[id] = block
+        this.blocks.push(block)
+      })
+    } else {
+      const block = this.renderer.addBlockImmediateOrFail(blockName, id)
       this.blockMap[id] = block
       this.blocks.push(block)
-    })
+    }
     this.broadcast('addBlock', [blockName, id])
+
+    return id
   }
 
   selectBlock (id: string, userId: string) {
@@ -209,6 +223,7 @@ export class SceneDataService {
   }
 
   importSandblox (data, renderer: SBRenderer) {
+    console.log('Importing scene', data)
     this.renderer.clearScene()
 
     if (!data.materials) {
@@ -217,6 +232,9 @@ export class SceneDataService {
 
     this.materials = data.materials.map(m =>
       this.materialService.fromExisting(m.id, m.color, m.texture))
+    for (const mat of this.materials) {
+      this.materialMap[mat.id] = mat
+    }
     this.blocks = []
 
     renderer.setExposure(data.environment.exposure)
