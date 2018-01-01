@@ -1,49 +1,43 @@
 import * as THREE from 'three'
 
+import { SceneDataService } from '../scene-data.service'
+import { Material } from '../material'
+
 export class X3DExporter {
 
-  export(blocks: THREE.Mesh[]) {
-    const doc = new DOMParser().parseFromString(`
-<?xml version="1.0" encoding="UTF-8"?>
+  export(sceneDataService: SceneDataService) {
+    const doc = new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.0//EN" "http://www.web3d.org/specifications/x3d-3.0.dtd">
 <X3D
   version="3.0"
   profile="Immersive"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema-instance"
-    xsd:noNamespaceSchemaLocation="http://www.web3d.org/specifications/x3d-3.0.xsd">
-</X3D>`, 'text/html')
-    console.log(doc)
+  xsd:noNamespaceSchemaLocation="http://www.web3d.org/specifications/x3d-3.0.xsd">
+</X3D>`, 'text/xml')
 
-    const materials = Array.from(new Set(blocks.map(child =>
-      (<THREE.Mesh> child).material as THREE.MeshStandardMaterial)))
-    const geometries = Array.from(new Set(blocks.map(block =>
-      (<THREE.Mesh> block).geometry)))
-
-    doc.rootElement.appendChild(this.create('head', {}, [
+    doc.children[0].appendChild(this.create('head', {}, [
       this.create('meta', {filename: 'scene.x3d'}),
       this.create('meta', {generator: 'sandblox x3d exporter'})
     ]))
 
-    doc.rootElement.appendChild(this.create('Scene', {}, [
-      ...geometries.map(geom => this.createBlockDef(geom as THREE.BufferGeometry)),
-      ...materials.map((mat, index) => this.createMaterialDef(index, mat)),
-      ...blocks.map(child => {
-        const mat = (child as THREE.Mesh).material as THREE.MeshStandardMaterial
-        return this.createBlockInstance(child.userData.block, materials.indexOf(mat), child as THREE.Mesh)
-      })
+    doc.children[0].appendChild(this.create('Scene', {}, [
+      ...Object.entries(sceneDataService.getUsedGeometryMap()).map(([name, geom]) => this.createBlockDef(name, geom)),
+      ...sceneDataService.materials.map(mat => this.createMaterialDef(mat)),
+      ...sceneDataService.blocks.map(block =>
+        this.createBlockInstance(block.userData.block, (block.material as THREE.Material).userData.id, block))
     ]))
 
-    return Promise.resolve(new XMLSerializer().serializeToString(doc.documentElement))
+    return Promise.resolve(new XMLSerializer().serializeToString(doc))
   }
 
-  createBlockDef(geometry: THREE.BufferGeometry) {
+  createBlockDef(blockName: string, geometry: THREE.BufferGeometry) {
     const attributes: any = geometry.attributes
 
     return this.create('IndexedFaceSet', {
       DEF: geometry.name,
       normalPerVertex: 'true',
       solid: 'true',
-      coordIndex: this.bufferToString(geometry.index)
+      coordIndex: this.faceIndexBufferToString(geometry.index)
     }, [
       this.create('Coordinate', {point: this.bufferToString(attributes.position)}),
       this.create('Normal', {vector: this.bufferToString(attributes.normal)}),
@@ -51,23 +45,24 @@ export class X3DExporter {
     ])
   }
 
-  createMaterialDef(name: number, material: THREE.MeshStandardMaterial) {
-    const image = material.map ?  [this.create('ImageTexture', {
+  createMaterialDef(material: Material) {
+    const image = material.texture ?  [this.create('ImageTexture', {
       containerField: 'diffuseTexture',
-      url: material.map.image.url
+      url: material.texture
     })] : []
+    const color = new THREE.Color(material.color)
 
     return this.create('CommonSurfaceShaderNode', {
-      DEF: 'mat' + name,
-      diffuseFactor: `${material.color.r} ${material.color.g} ${material.color.b}`
+      DEF: material.id,
+      diffuseFactor: `${color.r} ${color.g} ${color.b}`
     }, image)
   }
 
-  createBlockInstance(blockName: string, material: number, object: THREE.Mesh) {
+  createBlockInstance(blockName: string, material: string, object: THREE.Mesh) {
     return this.create('Transform', {}, [
       this.create('Shape', {}, [
         this.create('Appearance', {}, [
-          this.create('CommonSurfaceShaderNode', {USE: 'mat' + material})
+          this.create('CommonSurfaceShaderNode', {USE: material})
         ]),
         this.create('IndexedFaceSet', {USE: blockName})
       ])
@@ -75,7 +70,7 @@ export class X3DExporter {
   }
 
   create(tagName: string, props: {[name: string]: string} = {}, children: Element[] = []) {
-    const element = document.createElement(tagName)
+    const element = document.createElementNS(null, tagName)
     for (const [key, value] of Object.entries(props)) {
       element.setAttribute(key, value)
     }
@@ -88,5 +83,22 @@ export class X3DExporter {
   bufferToString (buffer: THREE.BufferAttribute) {
     const data: any = buffer.array
     return data.join(' ')
+  }
+
+  /**
+   * Convert buffer to format expected by X3D coordIndex. After each face, a -1 needs to appear.
+   */
+  faceIndexBufferToString (buffer: THREE.BufferAttribute) {
+    const data: number[] = <number[]> buffer.array
+    let str = ''
+    let faceEnd = 3
+    for (const num of data) {
+      str += num + ' '
+      if (--faceEnd === 0) {
+        faceEnd = 3
+        str += '-1 '
+      }
+    }
+    return str
   }
 }

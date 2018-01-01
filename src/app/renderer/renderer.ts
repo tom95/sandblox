@@ -390,7 +390,7 @@ export class SBRenderer {
   }
 
   exportX3D () {
-    return Promise.resolve(new X3DExporter().export(this.sceneDataService.blocks))
+    return Promise.resolve(new X3DExporter().export(this.sceneDataService))
   }
 
   clearScene () {

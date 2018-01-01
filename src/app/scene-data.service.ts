@@ -200,6 +200,14 @@ export class SceneDataService {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4()
   }
 
+  getUsedGeometryMap (): {[name: string]: THREE.BufferGeometry} {
+    const map = {}
+    for (const block of this.blocks) {
+         map[block.userData.block] = block.geometry as THREE.BufferGeometry
+    }
+    return map
+  }
+
   importSandblox (data, renderer: SBRenderer) {
     this.renderer.clearScene()
 

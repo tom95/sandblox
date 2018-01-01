@@ -27,6 +27,7 @@ export class Material {
       map: this.texture ? gltex : null,
       envMap: this.textureService.getDefaultEnvMap()
     })
+    this.glMaterial.userData.id = this.id
   }
 
   textureUrl () {
