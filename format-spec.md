@@ -2,7 +2,8 @@
 {
 	"materials": [
 		{"color": "0xff0000", "texture": "wall.jpg", "id": "material1id"},
-		{"color": "0xffffff", "texture": "roof.png", "id": "material2id"}
+		{"color": "0xffffff", "texture": "roof.png", "id": "material2id"},
+    {"color": "0x00ff00", "texture": null, "id": "material3id"}
 	],
 	"blocks": [
 		{
@@ -20,7 +21,7 @@
 			"id": "someotheridstring"
 		},
 		{
-			"material": ["material1id", "material2id"], /* multi-material objects, applied in the order of appearance in the source gltf */
+			"material": ["material1id", "material3id"], /* multi-material objects, applied in the order of appearance in the source gltf */
 			"position": [5, 0, 0],
 			"rotation": 0,
 			"block": "castle/door",
