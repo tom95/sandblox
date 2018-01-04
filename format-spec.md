@@ -3,7 +3,7 @@
 	"materials": [
 		{"color": "0xff0000", "texture": "wall.jpg", "id": "material1id"},
 		{"color": "0xffffff", "texture": "roof.png", "id": "material2id"},
-    {"color": "0x00ff00", "texture": null, "id": "material3id"}
+		{"color": "0x00ff00", "texture": null, "id": "material3id"}
 	],
 	"blocks": [
 		{
