@@ -228,7 +228,12 @@ export class SceneDataService {
   getUsedGeometryMap (): {[name: string]: THREE.BufferGeometry} {
     const map = {}
     for (const block of this.blocks) {
-         map[block.userData.block] = block.geometry as THREE.BufferGeometry
+      if (block.type === 'Group') {
+        block.children.forEach((c, i) =>
+          map[block.userData.block + '_' + i] = (<THREE.Mesh> c).geometry as THREE.BufferGeometry)
+      } else {
+        map[block.userData.block] = block.geometry as THREE.BufferGeometry
+      }
     }
     return map
   }
