@@ -1,4 +1,4 @@
 #!/bin/bash
-export DISPLAY=:99.0
-# sh -e /etc/init.d/xvfb start
-xvfb-run npm start
+Xvfb :99 -ac -screen 0 1280x720x16 -nolisten tcp &
+export DISPLAY=:99
+npm start
