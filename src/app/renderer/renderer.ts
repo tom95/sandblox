@@ -73,15 +73,14 @@ export class SBRenderer {
   composer: THREE.EffectComposer
   ssaoPass: THREE.SSAOPass
   renderer: TH.WebGLRenderer
-  outlineMaterial: TH.ShaderMaterial
-  outlineScene = new TH.Scene()
+  overlayScene = new TH.Scene()
 
   scene = new TH.Scene()
   camera: TH.PerspectiveCamera
   control: Gizmo
   cameraControls: any
 
-  blockGeometries: TH.BufferGeometry[] = []
+  blockGeometries: {[name: string]: TH.BufferGeometry|TH.Group} = {}
   materialPicker: Material
 
   defaultMaterial: TH.MeshStandardMaterial = null
@@ -98,7 +97,6 @@ export class SBRenderer {
   build () {
     this.buildScene()
     this.buildRenderer()
-    this.buildOutlineMaterial()
     this.registerSelection()
     this.buildControls()
     this.resize()
@@ -149,7 +147,7 @@ export class SBRenderer {
     copyPass.renderToScreen = false
     this.composer.addPass(copyPass)
 
-    const outlineRenderPass = new THREE.RenderPass(this.outlineScene, this.camera)
+    const outlineRenderPass = new THREE.RenderPass(this.overlayScene, this.camera)
     outlineRenderPass.clear = false
     outlineRenderPass.clearDepth = true
     outlineRenderPass.renderToScreen = false
@@ -172,7 +170,7 @@ export class SBRenderer {
     })
     this.control.duplicate.subscribe(block => this.duplicateAndSelect(block))
     this.control.snapIncrement = 0.1
-    this.outlineScene.add(this.control)
+    this.overlayScene.add(this.control)
 
     this.cameraControls = new CameraControls(this.camera, this.renderer.domElement)
     this.cameraControls.rotateSpeed = 0.5
@@ -181,9 +179,9 @@ export class SBRenderer {
 
     const light = new TH.DirectionalLight(0xffffff, 0.8)
     light.position.set(0.5, 0, 0.866)
-    this.outlineScene.background = null
-    this.outlineScene.add(light)
-    this.outlineScene.add(new TH.AmbientLight(0x787878, 0.8))
+    this.overlayScene.background = null
+    this.overlayScene.add(light)
+    this.overlayScene.add(new TH.AmbientLight(0x787878, 0.8))
   }
 
   registerSelection () {
@@ -207,13 +205,15 @@ export class SBRenderer {
 
       const intersects = raycaster.intersectObjects(this.selectableObjects(), true)
       if (intersects.length) {
+        const picked = intersects[0].object as TH.Mesh
         if (this.materialPicker) {
-          const block = (<TH.Mesh> intersects[0].object).userData.blockId
-          console.log(this.materialPicker)
-          this.sceneDataService.setMaterial(block, this.materialPicker.id)
+          const block = picked.userData.blockId
+          const index = picked.userData.materialIndex
+          this.sceneDataService.setMaterial(block, this.materialPicker.id, index)
         } else {
-          const picked = intersects[0].object
-          this.sceneDataService.selectBlock((picked.parent.type === 'Group' ? picked.parent : picked).userData.blockId, this.myUserId)
+          this.sceneDataService.selectBlock((picked.parent.type === 'Group'
+            ? picked.parent
+            : picked).userData.blockId, this.myUserId)
         }
       } else {
         this.sceneDataService.deselect()
@@ -279,30 +279,23 @@ export class SBRenderer {
     }
   }
 
-  duplicateAndSelect (block: TH.Mesh) {
+  duplicateAndSelect (block: TH.Object3D) {
     const id = this.sceneDataService.addBlock(block.userData.block, null, true)
     this.sceneDataService.moveBlock(id, block.position)
     this.sceneDataService.selectBlock(id, this.myUserId)
+    this.sceneDataService.rotateBlock(id, TH.Math.radToDeg(block.rotation.y))
+
+    if (block.type === 'Group') {
+      block.children.forEach((c, i) => {
+        this.sceneDataService.setMaterial(id, this.materialFromObject(c).userData.id, i)
+      })
+    } else {
+      this.sceneDataService.setMaterial(id, this.materialFromObject(block).userData.id, 0)
+    }
   }
 
-  buildOutlineMaterial () {
-    this.outlineMaterial = new TH.ShaderMaterial({
-      uniforms: {
-        offset: { value: 0 / BASE_SCALE }
-      },
-      vertexShader: `
-      uniform float offset;
-      void main() {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position + normal * offset, 1.0);
-      }
-      `,
-      fragmentShader: `
-      void main() {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
-      }
-      `
-    })
-    this.outlineMaterial.depthWrite = false
+  materialFromObject (object: TH.Object3D) {
+    return <TH.Material> (<TH.Mesh> object).material
   }
 
   getDefaultMaterial () {
@@ -318,11 +311,24 @@ export class SBRenderer {
       throw new Error('Geometry for ' + blockName + ' is not loaded.')
     }
 
-    const block = new TH.Mesh(geometry, this.getDefaultMaterial())
+    let block
+    if (geometry.type === 'Group') {
+      block = geometry.clone();
+      block.children.forEach((c, i) => {
+        c.material = this.getDefaultMaterial()
+        c.userData.blockId = id
+        c.userData.block = blockName
+        c.userData.materialIndex = i
+      })
+    } else {
+      block = new TH.Mesh(geometry as TH.BufferGeometry, this.getDefaultMaterial())
+    }
+
     block.scale.set(BASE_SCALE, BASE_SCALE, BASE_SCALE)
     block.position.set(BASE_SCALE / 2, 0, BASE_SCALE / 2)
     block.userData.block = blockName
     block.userData.blockId = id
+    block.userData.materialIndex = 0
     this.scene.add(block)
     this.setDirty()
     return block
@@ -332,7 +338,7 @@ export class SBRenderer {
     return this.loadBlock(blockName).then(() => this.addBlockImmediateOrFail(blockName, id))
   }
 
-  loadBlock (blockName): Promise<TH.BufferGeometry> {
+  loadBlock (blockName): Promise<TH.BufferGeometry|TH.Group> {
     let geometry = this.blockGeometries[blockName]
     if (geometry) {
       return Promise.resolve(geometry)
@@ -340,12 +346,17 @@ export class SBRenderer {
 
     return new Promise((resolve, reject) => {
       new THREE.GLTFLoader().load(`/public/blox/${blockName}.gltf`, data => {
-        geometry = data.scene.children[0].geometry as TH.BufferGeometry
+        if (data.scene.children[0].type === 'Group') {
+          geometry = data.scene.children[0] as TH.Group
+        } else {
+          geometry = data.scene.children[0].geometry as TH.BufferGeometry
+        }
+
         if (!geometry) {
           console.log(data)
           return alert('Error: Could not find geometry in downloaded gltf block!')
         }
-        geometry.name = blockName
+
         this.blockGeometries[blockName] = geometry
         resolve(geometry)
       })

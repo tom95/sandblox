@@ -56,9 +56,15 @@
     <mat-tab>
         <ng-template mat-tab-label><span class="icon icon-export"></span></ng-template>
 
-        <div class="content">
+        <div class="content export">
             <button (click)="exportScene.emit('gltf')" mat-raised-button>Export GLTF ...</button>
             <button (click)="exportScene.emit('x3d')" mat-raised-button>Export X3D ...</button>
+            <button (click)="exportScene.emit('sandblox')" mat-raised-button>Download Sandblox ...</button>
+
+            <button mat-raised-button (click)="fileInput.click()">
+                Open Sandblox ...
+                <input #fileInput type="file" (change)="importScene($event.target.files[0]); fileInput.value = null" style="display:none;" />
+            </button>
         </div>
     </mat-tab>
 </mat-tab-group>

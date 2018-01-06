@@ -63,7 +63,7 @@ io.on('connection', socket => {
   const color = COLORS[currentColorIndex]
   currentColorIndex = (currentColorIndex + 1) % COLORS.length
 
-  socket.emit('setScene', scene)
+  socket.emit('setScene', [scene])
   socket.emit('addUser', [socket.id, color, true])
   for (let [id, otherColor] of Object.entries(currentUsers)) {
     socket.emit('addUser', [id, otherColor, false])
@@ -78,6 +78,7 @@ io.on('connection', socket => {
   })
 
   for (const message of [
+    'setScene',
     'moveBlock',
     'setExposure',
     'setAmbientOcclusion',
@@ -94,12 +95,14 @@ io.on('connection', socket => {
   ]) {
     socket.on(message, data => {
       switch (message) {
+        case 'setScene':
+          scene = data[0]
         case 'addBlock':
           scene.blocks.push({
             block: data[0],
             id: data[1],
-            material: -1,
-            position: [0, 0, 0],
+            material: [-1],
+            position: [0.5, 0, 0.5],
             rotation: 0
           })
           break
@@ -128,7 +131,8 @@ io.on('connection', socket => {
           scene.materials.push({color: data[0], texture: data[1], id: data[2]})
           break
         case 'setMaterial':
-          scene.blocks.find(b => b.id === data[0]).material = scene.materials.findIndex(m => m.id === data[1])
+          const block = scene.blocks.find(b => b.id === data[0])
+          block.material[data[2]] = data[1]
           break
       }
       socket.broadcast.emit(message, data)

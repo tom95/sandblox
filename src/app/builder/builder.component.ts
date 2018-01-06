@@ -91,6 +91,11 @@ export class BuilderComponent implements OnInit, OnDestroy, OnChanges {
         promise = this.renderer.exportX3D()
         mimetype = 'application/xml'
         break
+      case 'sandblox':
+        promise = Promise.resolve(JSON.stringify(this.sceneDataService.exportSandblox()))
+        format = 'sandblox.json'
+        mimetype = 'model/sandblox+json'
+        break
       default:
         throw new Error('Invalid format')
     }

@@ -59,6 +59,13 @@ export class Material {
     return out
   }
 
+  updateId (id: string) {
+    this.id = id
+    if (this.glMaterial) {
+      this.glMaterial.userData.id = id
+    }
+  }
+
   export () {
     return {
       id: this.id,

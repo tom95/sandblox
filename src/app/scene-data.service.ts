@@ -44,13 +44,13 @@ export class SceneDataService {
 
     this.blocks = []
 
-    this.socket.on('setScene', scene => this.importSandblox(scene, this.renderer))
     this.socket.on('disconnect', () => {
       this.users = {}
       this.renderer.removeAllUsers()
     })
 
     for (const message of [
+      'setScene',
       'moveBlock',
       'setExposure',
       'setAmbientOcclusion',
@@ -81,7 +81,7 @@ export class SceneDataService {
     }
   }
 
-  addUser(userId: string, color: string, isSelf: boolean) {
+  addUser (userId: string, color: string, isSelf: boolean) {
     if (isSelf) {
       this.myUserId = userId
     }
@@ -93,6 +93,11 @@ export class SceneDataService {
   removeUser (userId) {
     this.renderer.removeUser(userId)
     delete this.users[userId]
+  }
+
+  setScene (scene) {
+    this.importSandblox(scene)
+    this.broadcast('setScene', [scene])
   }
 
   setExposure (exposure) {
@@ -111,7 +116,7 @@ export class SceneDataService {
     this.blockMap[id].position.copy(position)
     this.renderer.updateSelectionBoxes()
     this.renderer.setDirty()
-    this.broadcast('moveBlock', [id, position])
+    this.broadcast('moveBlock', [id, position.toArray()])
   }
 
   rotateBlock (id: string, rotation: number) {
@@ -190,17 +195,23 @@ export class SceneDataService {
     this.broadcast('setColor', [id, color])
   }
 
-  setMaterial (blockId: string, materialId: string) {
-    this.blockMap[blockId].material = this.materialMap[materialId].glMaterial
+  setMaterial (blockId: string, materialId: string, childIndex: number) {
+    console.log(materialId, this.materialMap)
+    const mat = this.materialMap[materialId].glMaterial
+    if (this.blockMap[blockId].type === 'Group') {
+      (<TH.Mesh> this.blockMap[blockId].children[childIndex]).material = mat
+    } else {
+      this.blockMap[blockId].material = mat
+    }
     this.renderer.setDirty()
-    this.broadcast('setMaterial', [blockId, materialId])
+    this.broadcast('setMaterial', [blockId, materialId, childIndex])
   }
 
   addMaterial (color: string = null, texture: string = null, id: string = null) {
     id = id || this.generateId()
 
     const material = this.materialService.create(color, texture)
-    material.id = id
+    material.updateId(id)
     this.materialMap[id] = material
     this.materials.push(material)
     this.broadcast('addMaterial', [material.color, material.texture, id])
@@ -222,7 +233,7 @@ export class SceneDataService {
     return map
   }
 
-  importSandblox (data, renderer: SBRenderer) {
+  importSandblox (data) {
     console.log('Importing scene', data)
     this.renderer.clearScene()
 
@@ -237,17 +248,19 @@ export class SceneDataService {
     }
     this.blocks = []
 
-    renderer.setExposure(data.environment.exposure)
-    renderer.setAmbientOcclusion(data.environment.ambientOcclusion)
+    this.renderer.setExposure(data.environment.exposure)
+    this.renderer.setAmbientOcclusion(data.environment.ambientOcclusion)
 
-    return Promise.all(data.blocks.map(info => renderer.addBlock(info.block, info.id).then(block => [block, info])))
+    return Promise.all(data.blocks.map(info => this.renderer.addBlock(info.block, info.id).then(block => [block, info])))
       .then((blocks: [TH.Mesh, any][]) => {
         for (const [block, info] of blocks) {
           block.position.fromArray(info.position)
           block.rotation.set(0, TH.Math.degToRad(info.rotation), 0)
-          block.material = this.materials[info.material]
-            ? this.materials[info.material].glMaterial
-            : renderer.getDefaultMaterial()
+          if (block.type === 'Group') {
+            block.children.forEach((c, i) => (<TH.Mesh> c).material = this.glMaterialForId(info.material[i]))
+          } else {
+            block.material = this.glMaterialForId(info.material[0])
+          }
           this.blocks.push(block)
           this.blockMap[info.id] = block
         }
@@ -255,11 +268,19 @@ export class SceneDataService {
       .catch(err => alert(err))
   }
 
+  glMaterialForId(id: string): TH.Material {
+    return this.materialMap[id]
+      ? this.materialMap[id].glMaterial
+      : this.renderer.getDefaultMaterial()
+  }
+
   exportSandblox () {
     return {
       materials: this.materials.map(m => m.export()),
       blocks: this.blocks.map(block => ({
-        material: this.materials.findIndex(m => m.glMaterial === block.material),
+        material: block.type === 'Group'
+          ? block.children.map(b => (<TH.Material> (<TH.Mesh> b).material).id)
+          : [(<TH.Material> block.material).id],
         position: block.position.toArray(),
         rotation: TH.Math.radToDeg(block.rotation.y),
         block: block.userData.block,

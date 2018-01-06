@@ -49,6 +49,22 @@ export class SidebarComponent implements OnInit {
     this.viewDirty.emit()
   }
 
+  importScene (file: File) {
+    const reader = new FileReader()
+    reader.onload = e => {
+      let data
+      try {
+        data = JSON.parse(reader.result)
+      } catch (e) {
+        console.log(e)
+        alert('Invalid file')
+        return
+      }
+      this.sceneDataService.setScene(data)
+    }
+    reader.readAsText(file)
+  }
+
   showMode (mode: string) {
     const MODES = [
       'blocks',

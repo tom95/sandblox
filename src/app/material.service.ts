@@ -14,7 +14,7 @@ export class MaterialService {
 
   fromExisting (id, color, texture) {
     const mat = new Material(this.textureService, color, texture)
-    mat.id = id
+    mat.updateId(id)
     return mat
   }
 
